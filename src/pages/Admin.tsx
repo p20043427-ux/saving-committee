@@ -1,12 +1,91 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/Card";
-import { Badge } from "@/src/components/ui/Badge";
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
 import { supabase } from "@/src/lib/supabase";
+
+interface InspectionItem {
+  id: string;
+  category: string;
+  name: string;
+  sortOrder: number;
+}
+
+const CATEGORIES = ["중점점검", "절약점검표"] as const;
 
 export function Admin() {
   const { buildings, departments } = useOrganization();
   const [isExporting, setIsExporting] = useState(false);
+
+  // 점검 항목
+  const [items, setItems] = useState<InspectionItem[]>([]);
+  const [itemsLoading, setItemsLoading] = useState(true);
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [editingItemName, setEditingItemName] = useState("");
+  const [addingCategory, setAddingCategory] = useState<string | null>(null);
+  const [newItemName, setNewItemName] = useState("");
+
+  useEffect(() => {
+    fetchItems();
+  }, []);
+
+  const fetchItems = async () => {
+    const { data, error } = await supabase
+      .from("sc_inspection_items")
+      .select("*")
+      .order("sort_order", { ascending: true });
+    if (!error && data) {
+      setItems(data.map((r: any) => ({
+        id: r.id,
+        category: r.category,
+        name: r.name,
+        sortOrder: r.sort_order ?? 0,
+      })));
+    }
+    setItemsLoading(false);
+  };
+
+  const startEditItem = (item: InspectionItem) => {
+    setEditingItemId(item.id);
+    setEditingItemName(item.name);
+    setAddingCategory(null);
+  };
+
+  const saveEditItem = async (id: string) => {
+    if (!editingItemName.trim()) return;
+    await supabase
+      .from("sc_inspection_items")
+      .update({ name: editingItemName.trim() })
+      .eq("id", id);
+    setEditingItemId(null);
+    fetchItems();
+  };
+
+  const deleteItem = async (id: string) => {
+    if (!confirm("이 항목을 삭제하시겠습니까?")) return;
+    await supabase.from("sc_inspection_items").delete().eq("id", id);
+    fetchItems();
+  };
+
+  const startAddItem = (category: string) => {
+    setAddingCategory(category);
+    setNewItemName("");
+    setEditingItemId(null);
+  };
+
+  const saveNewItem = async (category: string) => {
+    if (!newItemName.trim()) return;
+    const catItems = items.filter((i) => i.category === category);
+    const maxOrder = catItems.length > 0 ? Math.max(...catItems.map((i) => i.sortOrder)) + 1 : 1;
+    await supabase.from("sc_inspection_items").insert({
+      id: `I${Date.now()}`,
+      category,
+      name: newItemName.trim(),
+      sort_order: maxOrder,
+    });
+    setAddingCategory(null);
+    setNewItemName("");
+    fetchItems();
+  };
 
   const exportAllData = async () => {
     setIsExporting(true);
@@ -18,30 +97,21 @@ export function Admin() {
       const csvRows = [headers.join(",")];
 
       (records || []).forEach((data: any) => {
-        const bName = buildings.find(b => b.id === data.building_id)?.name || data.building_id || "";
-        const dName = data.department_name || departments.find(d => d.id === data.department_id)?.name || "";
-        const dDate = data.created_at ? new Date(data.created_at).toLocaleString('ko-KR') : "";
-
+        const bName = buildings.find((b) => b.id === data.building_id)?.name || data.building_id || "";
+        const dName = data.department_name || departments.find((d) => d.id === data.department_id)?.name || "";
+        const dDate = data.created_at ? new Date(data.created_at).toLocaleString("ko-KR") : "";
         const escapeCSV = (val: string | number) => `"${String(val).replace(/"/g, '""')}"`;
-
         const row = [
-          escapeCSV(dDate),
-          escapeCSV(bName),
-          escapeCSV(dName),
-          escapeCSV(data.inspector || ""),
-          escapeCSV(data.status || ""),
-          escapeCSV(data.total_score || 0),
-          escapeCSV(data.lights || 0),
-          escapeCSV(data.water || 0),
-          escapeCSV(data.recycle || 0),
-          escapeCSV(data.focus || 0),
-          escapeCSV(data.notes || "")
+          escapeCSV(dDate), escapeCSV(bName), escapeCSV(dName),
+          escapeCSV(data.inspector || ""), escapeCSV(data.status || ""),
+          escapeCSV(data.total_score || 0), escapeCSV(data.lights || 0),
+          escapeCSV(data.water || 0), escapeCSV(data.recycle || 0),
+          escapeCSV(data.focus || 0), escapeCSV(data.notes || ""),
         ];
         csvRows.push(row.join(","));
       });
 
-      const bom = "\uFEFF";
-      const blob = new Blob([bom + csvRows.join("\n")], { type: "text/csv;charset=utf-8" });
+      const blob = new Blob(["﻿" + csvRows.join("\n")], { type: "text/csv;charset=utf-8" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -65,6 +135,7 @@ export function Admin() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* 건물 마스터 관리 (링크 안내) */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
@@ -73,27 +144,20 @@ export function Admin() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 border border-surface-200 rounded-lg bg-surface-50">
-                <div>
-                  <p className="font-semibold text-sm">본관 (B01)</p>
-                  <p className="text-xs text-surface-500 mt-1">사용중</p>
+              {buildings.map((b) => (
+                <div key={b.id} className="flex items-center justify-between p-3 border border-surface-200 rounded-lg bg-surface-50">
+                  <div>
+                    <p className="font-semibold text-sm">{b.name} ({b.id})</p>
+                    <p className="text-xs text-surface-500 mt-1">사용중</p>
+                  </div>
                 </div>
-                <button className="text-surface-400 hover:text-primary-600">수정</button>
-              </div>
-              <div className="flex items-center justify-between p-3 border border-surface-200 rounded-lg bg-surface-50">
-                <div>
-                  <p className="font-semibold text-sm">신관 (B02)</p>
-                  <p className="text-xs text-surface-500 mt-1">사용중</p>
-                </div>
-                <button className="text-surface-400 hover:text-primary-600">수정</button>
-              </div>
-              <button className="w-full py-2 border-2 border-dashed border-surface-300 text-surface-500 rounded-lg text-sm font-medium hover:border-primary-400 hover:text-primary-600 transition-colors">
-                + 신규 건물 등록
-              </button>
+              ))}
+              <p className="text-xs text-surface-400 text-center pt-1">건물/부서 편집은 <span className="text-primary-500 font-medium">건물/부서 코드 관리</span> 메뉴를 이용하세요.</p>
             </div>
           </CardContent>
         </Card>
 
+        {/* 점검 항목 설정 */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
@@ -101,29 +165,79 @@ export function Admin() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4 text-sm">
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-medium text-surface-700">중점점검 항목 (4개)</span>
-                  <Badge variant="outline">수정</Badge>
-                </div>
-                <div className="h-2 w-full bg-surface-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-primary-500 w-full"></div>
-                </div>
+            {itemsLoading ? (
+              <p className="text-sm text-surface-400 text-center py-4">불러오는 중...</p>
+            ) : (
+              <div className="space-y-5">
+                {CATEGORIES.map((category) => {
+                  const catItems = items.filter((i) => i.category === category);
+                  return (
+                    <div key={category}>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-semibold text-surface-700">
+                          {category} ({catItems.length}개)
+                        </span>
+                        <button
+                          onClick={() => startAddItem(category)}
+                          className="text-xs text-primary-600 hover:text-primary-800 font-medium"
+                        >
+                          + 항목 추가
+                        </button>
+                      </div>
+
+                      <div className="space-y-1">
+                        {catItems.map((item) => (
+                          <div key={item.id} className="flex items-center gap-2 px-2 py-1.5 bg-surface-50 rounded-lg border border-surface-100">
+                            {editingItemId === item.id ? (
+                              <>
+                                <input
+                                  autoFocus
+                                  value={editingItemName}
+                                  onChange={(e) => setEditingItemName(e.target.value)}
+                                  onKeyDown={(e) => { if (e.key === "Enter") saveEditItem(item.id); if (e.key === "Escape") setEditingItemId(null); }}
+                                  className="flex-1 px-2 py-0.5 text-sm border border-primary-300 rounded focus:outline-none focus:ring-1 focus:ring-primary-500"
+                                />
+                                <button onClick={() => saveEditItem(item.id)} className="text-xs text-white bg-primary-600 px-2 py-0.5 rounded hover:bg-primary-700">저장</button>
+                                <button onClick={() => setEditingItemId(null)} className="text-xs text-surface-500 hover:text-surface-700">취소</button>
+                              </>
+                            ) : (
+                              <>
+                                <span className="flex-1 text-sm text-surface-800">{item.name}</span>
+                                <button onClick={() => startEditItem(item)} className="text-xs text-primary-600 hover:text-primary-800">수정</button>
+                                <button onClick={() => deleteItem(item.id)} className="text-xs text-red-500 hover:text-red-700">삭제</button>
+                              </>
+                            )}
+                          </div>
+                        ))}
+
+                        {catItems.length === 0 && addingCategory !== category && (
+                          <p className="text-xs text-surface-400 text-center py-2">등록된 항목이 없습니다.</p>
+                        )}
+
+                        {addingCategory === category && (
+                          <div className="flex items-center gap-2 px-2 py-1.5 bg-primary-50 rounded-lg border border-primary-200">
+                            <input
+                              autoFocus
+                              value={newItemName}
+                              onChange={(e) => setNewItemName(e.target.value)}
+                              onKeyDown={(e) => { if (e.key === "Enter") saveNewItem(category); if (e.key === "Escape") setAddingCategory(null); }}
+                              placeholder="항목명 입력"
+                              className="flex-1 px-2 py-0.5 text-sm border border-primary-300 rounded focus:outline-none focus:ring-1 focus:ring-primary-500 bg-white"
+                            />
+                            <button onClick={() => saveNewItem(category)} className="text-xs text-white bg-primary-600 px-2 py-0.5 rounded hover:bg-primary-700">추가</button>
+                            <button onClick={() => setAddingCategory(null)} className="text-xs text-surface-500 hover:text-surface-700">취소</button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-medium text-surface-700">절약점검표 항목 (4개)</span>
-                  <Badge variant="outline">수정</Badge>
-                </div>
-                <div className="h-2 w-full bg-surface-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-teal-400 w-full"></div>
-                </div>
-              </div>
-            </div>
+            )}
           </CardContent>
         </Card>
 
+        {/* 보안 및 고급 설정 */}
         <Card className="md:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2 text-red-600">
@@ -136,7 +250,7 @@ export function Admin() {
                 <p className="font-medium text-sm text-surface-900">데이터 백업</p>
                 <p className="text-xs text-surface-500 mt-1">모든 점검 기록 및 마스터 데이터를 CSV 파일로 내보냅니다.</p>
               </div>
-              <button 
+              <button
                 onClick={exportAllData}
                 disabled={isExporting}
                 className="px-4 py-2 bg-surface-100 text-surface-700 text-sm font-medium rounded-lg hover:bg-surface-200 disabled:opacity-50"
