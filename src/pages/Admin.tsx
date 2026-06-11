@@ -13,8 +13,46 @@ interface InspectionItem {
 const CATEGORIES = ["중점점검", "절약점검표"] as const;
 
 export function Admin() {
-  const { buildings, departments } = useOrganization();
+  const {
+    buildings,
+    departments,
+    addBuilding,
+    updateBuilding,
+    deleteBuilding,
+  } = useOrganization();
   const [isExporting, setIsExporting] = useState(false);
+
+  // 건물 관리
+  const [editingBuildingId, setEditingBuildingId] = useState<string | null>(null);
+  const [editingBuildingName, setEditingBuildingName] = useState("");
+  const [addingBuilding, setAddingBuilding] = useState(false);
+  const [newBuildingId, setNewBuildingId] = useState("");
+  const [newBuildingName, setNewBuildingName] = useState("");
+
+  const startEditBuilding = (id: string, name: string) => {
+    setEditingBuildingId(id);
+    setEditingBuildingName(name);
+    setAddingBuilding(false);
+  };
+
+  const saveEditBuilding = async (id: string) => {
+    if (!editingBuildingName.trim()) return;
+    await updateBuilding(id, editingBuildingName.trim());
+    setEditingBuildingId(null);
+  };
+
+  const handleDeleteBuilding = async (id: string) => {
+    if (!confirm(`건물 ${id}를 삭제하시겠습니까? 관련 부서 데이터에 영향이 있을 수 있습니다.`)) return;
+    await deleteBuilding(id);
+  };
+
+  const saveNewBuilding = async () => {
+    if (!newBuildingId.trim() || !newBuildingName.trim()) return;
+    await addBuilding({ id: newBuildingId.trim().toUpperCase(), name: newBuildingName.trim() });
+    setAddingBuilding(false);
+    setNewBuildingId("");
+    setNewBuildingName("");
+  };
 
   // 점검 항목
   const [items, setItems] = useState<InspectionItem[]>([]);
@@ -34,12 +72,14 @@ export function Admin() {
       .select("*")
       .order("sort_order", { ascending: true });
     if (!error && data) {
-      setItems(data.map((r: any) => ({
-        id: r.id,
-        category: r.category,
-        name: r.name,
-        sortOrder: r.sort_order ?? 0,
-      })));
+      setItems(
+        data.map((r: any) => ({
+          id: r.id,
+          category: r.category,
+          name: r.name,
+          sortOrder: r.sort_order ?? 0,
+        }))
+      );
     }
     setItemsLoading(false);
   };
@@ -52,10 +92,7 @@ export function Admin() {
 
   const saveEditItem = async (id: string) => {
     if (!editingItemName.trim()) return;
-    await supabase
-      .from("sc_inspection_items")
-      .update({ name: editingItemName.trim() })
-      .eq("id", id);
+    await supabase.from("sc_inspection_items").update({ name: editingItemName.trim() }).eq("id", id);
     setEditingItemId(null);
     fetchItems();
   };
@@ -135,7 +172,7 @@ export function Admin() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* 건물 마스터 관리 (링크 안내) */}
+        {/* 건물 마스터 관리 */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
@@ -143,16 +180,62 @@ export function Admin() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-2">
               {buildings.map((b) => (
-                <div key={b.id} className="flex items-center justify-between p-3 border border-surface-200 rounded-lg bg-surface-50">
-                  <div>
-                    <p className="font-semibold text-sm">{b.name} ({b.id})</p>
-                    <p className="text-xs text-surface-500 mt-1">사용중</p>
-                  </div>
+                <div key={b.id} className="flex items-center gap-2 p-3 border border-surface-200 rounded-lg bg-surface-50">
+                  {editingBuildingId === b.id ? (
+                    <>
+                      <span className="text-xs font-mono text-surface-400 w-12 shrink-0">{b.id}</span>
+                      <input
+                        autoFocus
+                        value={editingBuildingName}
+                        onChange={(e) => setEditingBuildingName(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter") saveEditBuilding(b.id); if (e.key === "Escape") setEditingBuildingId(null); }}
+                        className="flex-1 px-2 py-1 text-sm border border-primary-300 rounded focus:outline-none focus:ring-1 focus:ring-primary-500"
+                      />
+                      <button onClick={() => saveEditBuilding(b.id)} className="text-xs text-white bg-primary-600 px-2 py-1 rounded hover:bg-primary-700">저장</button>
+                      <button onClick={() => setEditingBuildingId(null)} className="text-xs text-surface-500 hover:text-surface-700">취소</button>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex-1">
+                        <p className="font-semibold text-sm">{b.name} <span className="text-surface-400 font-normal">({b.id})</span></p>
+                        <p className="text-xs text-surface-500 mt-0.5">사용중</p>
+                      </div>
+                      <button onClick={() => startEditBuilding(b.id, b.name)} className="text-xs text-primary-600 hover:text-primary-800 font-medium">수정</button>
+                      <button onClick={() => handleDeleteBuilding(b.id)} className="text-xs text-red-500 hover:text-red-700">삭제</button>
+                    </>
+                  )}
                 </div>
               ))}
-              <p className="text-xs text-surface-400 text-center pt-1">건물/부서 편집은 <span className="text-primary-500 font-medium">건물/부서 코드 관리</span> 메뉴를 이용하세요.</p>
+
+              {addingBuilding ? (
+                <div className="flex items-center gap-2 p-3 border border-primary-200 rounded-lg bg-primary-50">
+                  <input
+                    autoFocus
+                    value={newBuildingId}
+                    onChange={(e) => setNewBuildingId(e.target.value)}
+                    placeholder="코드 (예: B04)"
+                    className="w-24 px-2 py-1 text-sm border border-primary-300 rounded focus:outline-none focus:ring-1 focus:ring-primary-500 bg-white"
+                  />
+                  <input
+                    value={newBuildingName}
+                    onChange={(e) => setNewBuildingName(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") saveNewBuilding(); if (e.key === "Escape") setAddingBuilding(false); }}
+                    placeholder="건물명 (예: 암센터)"
+                    className="flex-1 px-2 py-1 text-sm border border-primary-300 rounded focus:outline-none focus:ring-1 focus:ring-primary-500 bg-white"
+                  />
+                  <button onClick={saveNewBuilding} className="text-xs text-white bg-primary-600 px-2 py-1 rounded hover:bg-primary-700">추가</button>
+                  <button onClick={() => setAddingBuilding(false)} className="text-xs text-surface-500 hover:text-surface-700">취소</button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => { setAddingBuilding(true); setEditingBuildingId(null); }}
+                  className="w-full py-2 border-2 border-dashed border-surface-300 text-surface-500 rounded-lg text-sm font-medium hover:border-primary-400 hover:text-primary-600 transition-colors"
+                >
+                  + 신규 건물 등록
+                </button>
+              )}
             </div>
           </CardContent>
         </Card>
