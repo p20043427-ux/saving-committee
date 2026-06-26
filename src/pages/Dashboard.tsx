@@ -77,7 +77,7 @@ export function Dashboard() {
         <div className="grid grid-cols-2 gap-4">
           {mobileNavItems.map((item, idx) => (
             <Link key={idx} to={item.to} className="bg-white rounded-xl shadow-sm border border-surface-200 p-4 flex flex-col items-center justify-center gap-3 hover:bg-surface-50 active:scale-95 transition-all">
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${item.color}`}>
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${item.color}`} role="img" aria-label={item.label}>
                 {item.icon}
               </div>
               <span className="text-sm font-bold text-surface-700 text-center">{item.label}</span>
@@ -103,7 +103,7 @@ export function Dashboard() {
                 <div key={i} className="flex flex-col border-b border-surface-50 pb-3 last:border-0 hover:bg-surface-50 p-2 rounded transition-colors">
                   <div className="flex justify-between items-center text-sm gap-2">
                     <span className="font-bold text-surface-800 text-base flex items-center gap-2">
-                      <span className="text-pink-500">🤝</span> {e.title}
+                      <span className="text-pink-500" role="img" aria-label="행사">🤝</span> {e.title}
                     </span>
                     <span className="flex-shrink-0 text-sm font-medium text-surface-600 bg-surface-100 px-3 py-1 rounded-full">{e.date}</span>
                   </div>
@@ -130,7 +130,7 @@ export function Dashboard() {
                 <div key={i} className="flex flex-col border-b border-surface-50 pb-3 last:border-0 hover:bg-surface-50 p-2 rounded transition-colors">
                   <div className="flex justify-between items-center text-sm gap-2">
                     <span className="font-bold text-surface-800 text-base flex items-center gap-2">
-                      <span className="text-green-500">🗓️</span> {s.turn}차 점검
+                      <span className="text-green-500" role="img" aria-label="점검 일정">🗓️</span> {s.turn}차 점검
                     </span>
                     <span className="text-sm font-medium text-surface-600 bg-surface-100 px-3 py-1 rounded-full">{s.date}</span>
                   </div>

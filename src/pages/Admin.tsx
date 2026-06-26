@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import type { ChangeEvent } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/Card";
+import { Button } from "@/src/components/ui/Button";
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
 import { supabase } from "@/src/lib/supabase";
 
@@ -252,8 +253,8 @@ export function Admin() {
                         onKeyDown={(e) => { if (e.key === "Enter") saveEditBuilding(b.id); if (e.key === "Escape") setEditingBuildingId(null); }}
                         className="flex-1 px-2 py-1 text-sm border border-primary-300 rounded focus:outline-none focus:ring-1 focus:ring-primary-500"
                       />
-                      <button onClick={() => saveEditBuilding(b.id)} className="text-xs text-white bg-primary-600 px-2 py-1 rounded hover:bg-primary-700">저장</button>
-                      <button onClick={() => setEditingBuildingId(null)} className="text-xs text-surface-500 hover:text-surface-700">취소</button>
+                      <Button variant="primary" onClick={() => saveEditBuilding(b.id)}>저장</Button>
+                      <Button variant="secondary" onClick={() => setEditingBuildingId(null)}>취소</Button>
                     </>
                   ) : (
                     <>
@@ -262,7 +263,7 @@ export function Admin() {
                         <p className="text-xs text-surface-500 mt-0.5">사용중</p>
                       </div>
                       <button onClick={() => startEditBuilding(b.id, b.name)} className="text-xs text-primary-600 hover:text-primary-800 font-medium">수정</button>
-                      <button onClick={() => handleDeleteBuilding(b.id)} className="text-xs text-red-500 hover:text-red-700">삭제</button>
+                      <Button variant="danger" onClick={() => handleDeleteBuilding(b.id)}>삭제</Button>
                     </>
                   )}
                 </div>
@@ -284,8 +285,8 @@ export function Admin() {
                     placeholder="건물명 (예: 암센터)"
                     className="flex-1 px-2 py-1 text-sm border border-primary-300 rounded focus:outline-none focus:ring-1 focus:ring-primary-500 bg-white"
                   />
-                  <button onClick={saveNewBuilding} className="text-xs text-white bg-primary-600 px-2 py-1 rounded hover:bg-primary-700">추가</button>
-                  <button onClick={() => setAddingBuilding(false)} className="text-xs text-surface-500 hover:text-surface-700">취소</button>
+                  <Button variant="primary" onClick={saveNewBuilding}>추가</Button>
+                  <Button variant="secondary" onClick={() => setAddingBuilding(false)}>취소</Button>
                 </div>
               ) : (
                 <button
@@ -339,14 +340,14 @@ export function Admin() {
                                   onKeyDown={(e) => { if (e.key === "Enter") saveEditItem(item.id); if (e.key === "Escape") setEditingItemId(null); }}
                                   className="flex-1 px-2 py-0.5 text-sm border border-primary-300 rounded focus:outline-none focus:ring-1 focus:ring-primary-500"
                                 />
-                                <button onClick={() => saveEditItem(item.id)} className="text-xs text-white bg-primary-600 px-2 py-0.5 rounded hover:bg-primary-700">저장</button>
-                                <button onClick={() => setEditingItemId(null)} className="text-xs text-surface-500 hover:text-surface-700">취소</button>
+                                <Button variant="primary" onClick={() => saveEditItem(item.id)}>저장</Button>
+                                <Button variant="secondary" onClick={() => setEditingItemId(null)}>취소</Button>
                               </>
                             ) : (
                               <>
                                 <span className="flex-1 text-sm text-surface-800">{item.name}</span>
                                 <button onClick={() => startEditItem(item)} className="text-xs text-primary-600 hover:text-primary-800">수정</button>
-                                <button onClick={() => deleteItem(item.id)} className="text-xs text-red-500 hover:text-red-700">삭제</button>
+                                <Button variant="danger" onClick={() => deleteItem(item.id)}>삭제</Button>
                               </>
                             )}
                           </div>
@@ -366,8 +367,8 @@ export function Admin() {
                               placeholder="항목명 입력"
                               className="flex-1 px-2 py-0.5 text-sm border border-primary-300 rounded focus:outline-none focus:ring-1 focus:ring-primary-500 bg-white"
                             />
-                            <button onClick={() => saveNewItem(category)} className="text-xs text-white bg-primary-600 px-2 py-0.5 rounded hover:bg-primary-700">추가</button>
-                            <button onClick={() => setAddingCategory(null)} className="text-xs text-surface-500 hover:text-surface-700">취소</button>
+                            <Button variant="primary" onClick={() => saveNewItem(category)}>추가</Button>
+                            <Button variant="secondary" onClick={() => setAddingCategory(null)}>취소</Button>
                           </div>
                         )}
                       </div>
@@ -394,20 +395,22 @@ export function Admin() {
                   <p className="text-xs text-surface-500 mt-1">전체 점검 기록을 복구 가능한 CSV로 내보냅니다.</p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="md"
                     onClick={exportAllData}
                     disabled={isExporting || isImporting}
-                    className="px-4 py-2 bg-surface-100 text-surface-700 text-sm font-medium rounded-lg hover:bg-surface-200 disabled:opacity-50"
                   >
                     {isExporting ? "추출 중..." : "내보내기"}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="md"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isExporting || isImporting}
-                    className="px-4 py-2 border border-surface-300 text-surface-700 text-sm font-medium rounded-lg hover:bg-surface-50 disabled:opacity-50"
                   >
                     {isImporting ? "복구 중..." : "복구 파일 선택..."}
-                  </button>
+                  </Button>
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -445,9 +448,9 @@ export function Admin() {
                 <p className="font-medium text-sm text-red-600">시스템 초기화</p>
                 <p className="text-xs text-surface-500 mt-1">모든 설정과 데이터를 초기 상태로 되돌립니다. (복구 불가)</p>
               </div>
-              <button className="px-4 py-2 border border-red-200 text-red-600 hover:bg-red-50 text-sm font-medium rounded-lg transition-colors">
+              <Button variant="danger" size="md">
                 초기화 진행
-              </button>
+              </Button>
             </div>
           </CardContent>
         </Card>

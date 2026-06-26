@@ -55,3 +55,15 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-surface-400;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse,
+  .animate-ping,
+  .animate-spin,
+  .animate-bounce {
+    animation: none !important;
+  }
+  * {
+    transition-duration: 0.01ms !important;
+  }
+}

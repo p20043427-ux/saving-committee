@@ -9,11 +9,13 @@ export function Topbar({ onToggleMenu }: TopbarProps) {
   return (
     <header className="flex justify-between items-center shrink-0 w-full max-w-7xl mx-auto border-b border-surface-200 md:border-b-0 pb-4 md:pb-0 mb-2 md:mb-0">
       <div className="flex items-center space-x-3">
-        <button 
+        <button
           onClick={onToggleMenu}
+          aria-label="메뉴 열기"
+          aria-expanded={false}
           className="md:hidden p-2 -ml-2 text-surface-600 hover:bg-surface-100 rounded-lg transition-colors"
         >
-          <Menu className="w-6 h-6" />
+          <Menu className="w-6 h-6" aria-hidden="true" />
         </button>
         <div>
           <h1 className="text-xl md:text-2xl font-bold text-surface-800">절약위원회</h1>
@@ -22,8 +24,8 @@ export function Topbar({ onToggleMenu }: TopbarProps) {
       </div>
       
       <div className="flex items-center space-x-3">
-        <div className="hidden sm:flex items-center space-x-2 text-sm bg-white border border-surface-200 py-2 px-3 rounded-lg shadow-sm">
-          <span className="flex h-2 w-2 relative">
+        <div role="status" aria-live="polite" aria-label="시스템 상태: 정상" className="hidden sm:flex items-center space-x-2 text-sm bg-white border border-surface-200 py-2 px-3 rounded-lg shadow-sm">
+          <span className="flex h-2 w-2 relative" aria-hidden="true">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
           </span>
