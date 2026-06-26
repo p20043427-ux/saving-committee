@@ -22,6 +22,7 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
 
   // 상위에서 기본 점검자 이름이 변경되면 로컬 상태도 업데이트 (입력된 값이 없을 때만)
   useEffect(() => {
@@ -85,8 +86,8 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
       });
       if (error) throw error;
 
-      alert(`${inspector}님의 점검 결과가 동기화되었습니다. ✅`);
-      onSuccess();
+      setSuccessMsg(`${inspector}님 점검 결과 저장 완료`);
+      setTimeout(() => { onSuccess(); }, 1500);
     } catch (error) {
       console.error("Error adding document: ", error);
       setErrorMessage("서버 저장 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
@@ -125,7 +126,7 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
             <span className="text-sm font-medium text-surface-700">{item.name}</span>
             <div className="flex items-center space-x-1">
               {[1, 2, 3, 4, 5].map((score) => (
-                <label key={score} className="flex flex-col items-center cursor-pointer group flex-1">
+                <label key={score} className="flex flex-col items-center cursor-pointer group flex-1 py-1">
                   <input 
                     type="radio" 
                     name={`inline-${item.id}`} 
@@ -134,7 +135,7 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
                     onChange={() => setScores(prev => ({ ...prev, [item.id]: score }))}
                     className="sr-only" 
                   />
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all outline outline-1 group-hover:bg-primary-50
+                  <div className={`w-11 h-11 rounded-full flex items-center justify-center text-base font-semibold transition-all outline outline-1 group-hover:bg-primary-50 touch-manipulation
                     ${scores[item.id] === score ? 'bg-primary-600 text-white outline-primary-600 shadow-sm' : 'text-surface-700 outline-surface-300'}`}>
                     {score}
                   </div>
@@ -155,6 +156,12 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
           onChange={(e) => setNotes(e.target.value)}
         ></textarea>
       </div>
+
+      {successMsg && (
+        <div className="p-3 text-sm text-green-700 bg-green-50 border border-green-200 rounded-md flex items-center gap-2">
+          <span>✓</span> {successMsg}
+        </div>
+      )}
 
       <div className="flex justify-end space-x-2 pt-2">
         <button type="button" onClick={onCancel} className="px-3 py-1.5 rounded-lg border border-surface-300 text-surface-700 font-medium text-sm hover:bg-surface-100 transition-colors" disabled={isSubmitting}>

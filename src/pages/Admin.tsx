@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import type { ChangeEvent } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/Card";
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
 import { supabase } from "@/src/lib/supabase";
@@ -21,6 +22,9 @@ export function Admin() {
     deleteBuilding,
   } = useOrganization();
   const [isExporting, setIsExporting] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importResult, setImportResult] = useState<{ ok: boolean; msg: string } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 건물 관리
   const [editingBuildingId, setEditingBuildingId] = useState<string | null>(null);
@@ -130,20 +134,29 @@ export function Admin() {
       const { data: records, error } = await supabase.from("sc_records").select("*");
       if (error) throw error;
 
-      const headers = ["점검일시", "건물명", "부서명", "점검자", "상태", "총점", "조명/전열", "수돗물", "재활용", "관심도", "특이사항"];
+      const headers = [
+        "id", "building_id", "department_id", "department_name", "inspector",
+        "date", "lights", "water", "recycle", "focus", "total_score", "notes", "status",
+      ];
       const csvRows = [headers.join(",")];
 
+      const escapeCSV = (val: string | number) => `"${String(val ?? "").replace(/"/g, '""')}"`;
+
       (records || []).forEach((data: any) => {
-        const bName = buildings.find((b) => b.id === data.building_id)?.name || data.building_id || "";
-        const dName = data.department_name || departments.find((d) => d.id === data.department_id)?.name || "";
-        const dDate = data.created_at ? new Date(data.created_at).toLocaleString("ko-KR") : "";
-        const escapeCSV = (val: string | number) => `"${String(val).replace(/"/g, '""')}"`;
         const row = [
-          escapeCSV(dDate), escapeCSV(bName), escapeCSV(dName),
-          escapeCSV(data.inspector || ""), escapeCSV(data.status || ""),
-          escapeCSV(data.total_score || 0), escapeCSV(data.lights || 0),
-          escapeCSV(data.water || 0), escapeCSV(data.recycle || 0),
-          escapeCSV(data.focus || 0), escapeCSV(data.notes || ""),
+          escapeCSV(data.id || ""),
+          escapeCSV(data.building_id || ""),
+          escapeCSV(data.department_id || ""),
+          escapeCSV(data.department_name || ""),
+          escapeCSV(data.inspector || ""),
+          escapeCSV(data.date || ""),
+          escapeCSV(data.lights ?? 0),
+          escapeCSV(data.water ?? 0),
+          escapeCSV(data.recycle ?? 0),
+          escapeCSV(data.focus ?? 0),
+          escapeCSV(data.total_score ?? 0),
+          escapeCSV(data.notes || ""),
+          escapeCSV(data.status || ""),
         ];
         csvRows.push(row.join(","));
       });
@@ -152,15 +165,61 @@ export function Admin() {
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `시스템전체백업_${new Date().toISOString().split("T")[0]}.csv`;
+      link.download = `sc_records_backup_${new Date().toISOString().split("T")[0]}.csv`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     } catch (e) {
       console.error(e);
-      alert("백업 중 오류가 발생했습니다.");
+      setImportResult({ ok: false, msg: `백업 실패: ${e instanceof Error ? e.message : "알 수 없는 오류"}` });
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  const importFromCSV = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsImporting(true);
+    setImportResult(null);
+    try {
+      const text = await file.text();
+      const lines = text.replace(/^﻿/, "").split("\n").filter((l) => l.trim());
+      if (lines.length < 2) throw new Error("데이터 행이 없습니다.");
+      const delimiter = lines[0].includes("\t") ? "\t" : ",";
+      const headers = lines[0].split(delimiter).map((h) => h.trim().replace(/^"|"$/g, ""));
+      const rows = lines
+        .slice(1)
+        .map((line) => {
+          const vals = line.split(delimiter).map((v) => v.trim().replace(/^"|"$/g, ""));
+          return Object.fromEntries(headers.map((h, i) => [h, vals[i] ?? ""])) as Record<string, string>;
+        })
+        .filter((r) => r.id);
+
+      const records = rows.map((r) => ({
+        id: r.id,
+        building_id: r.building_id,
+        department_id: r.department_id,
+        department_name: r.department_name,
+        inspector: r.inspector,
+        date: r.date,
+        lights: Number(r.lights),
+        water: Number(r.water),
+        recycle: Number(r.recycle),
+        focus: Number(r.focus),
+        total_score: Number(r.total_score),
+        notes: r.notes,
+        status: r.status,
+      }));
+
+      const { error } = await supabase.from("sc_records").upsert(records, { onConflict: "id" });
+      if (error) throw error;
+      setImportResult({ ok: true, msg: `${records.length}건 복구 완료` });
+    } catch (err: unknown) {
+      setImportResult({ ok: false, msg: `복구 실패: ${err instanceof Error ? err.message : "알 수 없는 오류"}` });
+    } finally {
+      setIsImporting(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
@@ -328,18 +387,48 @@ export function Admin() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-between py-4 border-b border-surface-100">
-              <div>
-                <p className="font-medium text-sm text-surface-900">데이터 백업</p>
-                <p className="text-xs text-surface-500 mt-1">모든 점검 기록 및 마스터 데이터를 CSV 파일로 내보냅니다.</p>
+            <div className="py-4 border-b border-surface-100">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="font-medium text-sm text-surface-900">데이터 백업</p>
+                  <p className="text-xs text-surface-500 mt-1">전체 점검 기록을 복구 가능한 CSV로 내보냅니다.</p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={exportAllData}
+                    disabled={isExporting || isImporting}
+                    className="px-4 py-2 bg-surface-100 text-surface-700 text-sm font-medium rounded-lg hover:bg-surface-200 disabled:opacity-50"
+                  >
+                    {isExporting ? "추출 중..." : "내보내기"}
+                  </button>
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isExporting || isImporting}
+                    className="px-4 py-2 border border-surface-300 text-surface-700 text-sm font-medium rounded-lg hover:bg-surface-50 disabled:opacity-50"
+                  >
+                    {isImporting ? "복구 중..." : "복구 파일 선택..."}
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".csv,text/csv"
+                    onChange={importFromCSV}
+                    className="hidden"
+                  />
+                </div>
               </div>
-              <button
-                onClick={exportAllData}
-                disabled={isExporting}
-                className="px-4 py-2 bg-surface-100 text-surface-700 text-sm font-medium rounded-lg hover:bg-surface-200 disabled:opacity-50"
-              >
-                {isExporting ? "추출 중..." : "내보내기"}
-              </button>
+              {importResult && (
+                <div
+                  className={`mt-3 p-2.5 text-sm rounded-md border ${
+                    importResult.ok
+                      ? "text-green-700 bg-green-50 border-green-200"
+                      : "text-red-600 bg-red-50 border-red-200"
+                  }`}
+                >
+                  {importResult.ok ? "✓ " : "⚠ "}
+                  {importResult.msg}
+                </div>
+              )}
             </div>
             <div className="flex items-center justify-between py-4 border-b border-surface-100">
               <div>
