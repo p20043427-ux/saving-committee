@@ -17,12 +17,12 @@ function Badge({ className, variant = "default", children, ...props }: BadgeProp
             variant === "default",
           "border-transparent bg-surface-100 text-surface-900 hover:bg-surface-100/80":
             variant === "secondary",
-          "border-transparent bg-red-500 text-surface-50 hover:bg-red-500/80":
+          "border-transparent bg-danger-500 text-surface-50 hover:bg-danger-500/80":
             variant === "destructive",
           "text-surface-950 border-surface-200": variant === "outline",
-          "border-transparent bg-green-100 text-green-800 hover:bg-green-100/80":
+          "border-transparent bg-success-100 text-success-800 hover:bg-success-100/80":
             variant === "success",
-          "border-transparent bg-amber-100 text-amber-800 hover:bg-amber-100/80":
+          "border-transparent bg-warning-100 text-warning-800 hover:bg-warning-100/80":
             variant === "warning",
         },
         className

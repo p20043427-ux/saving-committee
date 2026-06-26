@@ -207,7 +207,7 @@ export function Committee() {
                   <td className="py-3 px-4 text-surface-600">{member.department}</td>
                   <td className="py-3 px-4 text-surface-600">{member.role}</td>
                   <td className="py-3 px-4 text-surface-600">
-                    <span className={`px-2 py-1 text-xs font-semibold rounded-md ${member.isActive ? 'bg-green-100 text-green-700' : 'bg-surface-100 text-surface-600'}`}>
+                    <span className={`px-2 py-1 text-xs font-semibold rounded-md ${member.isActive ? 'bg-success-100 text-success-700' : 'bg-surface-100 text-surface-600'}`}>
                       {member.isActive ? '활동 중' : '비활동'}
                     </span>
                   </td>

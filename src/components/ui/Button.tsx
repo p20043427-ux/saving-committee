@@ -12,7 +12,7 @@ const variants: Record<ButtonVariant, string> = {
   primary:   "bg-surface-900 text-white hover:bg-surface-800 active:scale-95",
   secondary: "border border-surface-300 text-surface-700 hover:bg-surface-100 bg-white",
   ghost:     "bg-surface-100 text-surface-700 hover:bg-surface-200 border border-surface-200",
-  danger:    "border border-red-200 text-red-600 hover:bg-red-50",
+  danger:    "border border-danger-200 text-danger-600 hover:bg-danger-50",
 };
 
 const sizes: Record<ButtonSize, string> = {

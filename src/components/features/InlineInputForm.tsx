@@ -103,7 +103,7 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
       <div className="text-sm font-bold text-surface-900 border-b border-surface-200 pb-2">점검표 입력 ({inspectionDate})</div>
       
       {errorMessage && (
-        <div role="alert" className="p-3 my-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+        <div role="alert" className="p-3 my-2 text-sm text-danger-600 bg-danger-50 border border-danger-200 rounded-md">
           {errorMessage}
         </div>
       )}
@@ -155,8 +155,8 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
       </div>
 
       {successMsg && (
-        <div className="p-3 text-sm text-green-700 bg-green-50 border border-green-200 rounded-md flex items-center gap-2">
-          <span>✓</span> {successMsg}
+        <div role="status" className="p-3 text-sm text-success-700 bg-success-50 border border-success-200 rounded-md flex items-center gap-2">
+          <span aria-hidden="true">✓</span> {successMsg}
         </div>
       )}
 

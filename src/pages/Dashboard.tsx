@@ -58,14 +58,14 @@ export function Dashboard() {
   }
 
   const mobileNavItems = [
-    { to: "/monitoring", icon: "📅", label: "점검 조회/입력", color: "bg-blue-100 text-blue-700" },
-    { to: "/data-management", icon: "📋", label: "점검 데이터", color: "bg-purple-100 text-purple-700" },
-    { to: "/schedule", icon: "🗓️", label: "점검 스케줄", color: "bg-green-100 text-green-700" },
-    { to: "/committee", icon: "👥", label: "명단 관리", color: "bg-orange-100 text-orange-700" },
-    { to: "/events", icon: "🤝", label: "월별 행사", color: "bg-pink-100 text-pink-700" },
-    { to: "/management", icon: "🏢", label: "코드 관리", color: "bg-indigo-100 text-indigo-700" },
-    { to: "/yearly-report", icon: "📈", label: "연간 리포트", color: "bg-teal-100 text-teal-700" },
-    { to: "/admin", icon: "⚙️", label: "시스템 설정", color: "bg-slate-100 text-slate-700" },
+    { to: "/monitoring", icon: "📅", label: "점검 조회/입력", color: "bg-info-100 text-info-700" },
+    { to: "/data-management", icon: "📋", label: "점검 데이터", color: "bg-primary-100 text-primary-700" },
+    { to: "/schedule", icon: "🗓️", label: "점검 스케줄", color: "bg-success-100 text-success-700" },
+    { to: "/committee", icon: "👥", label: "명단 관리", color: "bg-warning-100 text-warning-700" },
+    { to: "/events", icon: "🤝", label: "월별 행사", color: "bg-danger-100 text-danger-700" },
+    { to: "/management", icon: "🏢", label: "코드 관리", color: "bg-primary-50 text-primary-600" },
+    { to: "/yearly-report", icon: "📈", label: "연간 리포트", color: "bg-success-50 text-success-600" },
+    { to: "/admin", icon: "⚙️", label: "시스템 설정", color: "bg-surface-100 text-surface-700" },
   ];
 
   return (
