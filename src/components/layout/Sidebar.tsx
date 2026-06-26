@@ -2,15 +2,15 @@ import { NavLink } from "react-router";
 import { cn } from "@/src/lib/utils";
 
 const navItems = [
-  { to: "/", icon: "📊", label: "대시보드" },
-  { to: "/monitoring", icon: "📅", label: "점검 조회/입력" },
-  { to: "/data-management", icon: "📋", label: "점검 데이터 관리" },
-  { to: "/schedule", icon: "🗓️", label: "점검 스케줄" },
-  { to: "/committee", icon: "👥", label: "위원회 명단 관리" },
-  { to: "/events", icon: "🤝", label: "월별 행사 관리" },
-  { to: "/management", icon: "🏢", label: "건물/부서 코드 관리" },
-  { to: "/yearly-report", icon: "📈", label: "연간 분석 리포트" },
-  { to: "/admin", icon: "⚙️", label: "시스템 설정" },
+  { to: "/", icon: "◈", label: "대시보드" },
+  { to: "/monitoring", icon: "◉", label: "점검 조회/입력" },
+  { to: "/data-management", icon: "◧", label: "점검 데이터 관리" },
+  { to: "/schedule", icon: "◫", label: "점검 스케줄" },
+  { to: "/committee", icon: "◎", label: "위원회 명단 관리" },
+  { to: "/events", icon: "◈", label: "월별 행사 관리" },
+  { to: "/management", icon: "◰", label: "건물/부서 코드 관리" },
+  { to: "/yearly-report", icon: "◈", label: "연간 분석 리포트" },
+  { to: "/admin", icon: "◍", label: "시스템 설정" },
 ];
 
 interface SidebarProps {
@@ -23,44 +23,54 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
     <aside
       aria-label="메인 네비게이션"
       className={cn(
-      "w-64 bg-white border-r border-surface-200 flex flex-col p-6 space-y-8 shrink-0",
-      "fixed md:static inset-y-0 left-0 z-50 transform transition-transform duration-300 ease-in-out md:transform-none",
-      isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-    )}>
-      <div className="flex items-center space-x-3">
-        <div className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-sm" aria-hidden="true">
-          좋
+        "w-60 bg-primary-900 flex flex-col shrink-0",
+        "fixed md:static inset-y-0 left-0 z-50 transform transition-transform duration-300 ease-in-out md:transform-none",
+        isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+      )}
+    >
+      {/* Logo */}
+      <div className="flex items-center gap-3 px-5 py-5 border-b border-primary-800">
+        <div className="w-9 h-9 bg-accent-400 rounded-lg flex items-center justify-center shrink-0" aria-hidden="true">
+          <span className="text-white font-bold text-base leading-none">좋</span>
         </div>
-        <span className="text-xl font-bold tracking-tight text-surface-900" aria-label="좋은문화병원">좋은문화병원</span>
+        <div>
+          <div className="text-white font-bold text-sm leading-tight" aria-label="좋은문화병원">좋은문화병원</div>
+          <div className="text-primary-300 text-[10px] leading-tight mt-0.5">Energy Management</div>
+        </div>
       </div>
 
-      <div className="space-y-1">
-        <div className="text-[11px] font-semibold text-surface-400 uppercase tracking-wider mb-2">Menu</div>
-        <nav aria-label="주요 메뉴">
-          <ul role="list" className="space-y-1">
-            {navItems.map((item) => (
-              <li key={item.to}>
-                <NavLink
-                  to={item.to}
-                  onClick={onClose}
-                  className={({ isActive }) =>
-                    cn(
-                      "flex items-center space-x-3 px-3 py-3 rounded-lg text-sm transition-colors cursor-pointer",
-                      isActive
-                        ? "bg-primary-50 text-primary-700 font-medium"
-                        : "text-surface-500 hover:bg-surface-100"
-                    )
-                  }
-                >
-                  <span className="text-lg" role="img" aria-label={item.label}>{item.icon}</span>
-                  <span>{item.label}</span>
-                </NavLink>
-              </li>
-            ))}
-          </ul>
-        </nav>
-      </div>
+      {/* Nav */}
+      <nav aria-label="주요 메뉴" className="flex-1 px-3 py-4 overflow-y-auto">
+        <div className="text-[10px] font-semibold text-primary-400 uppercase tracking-widest px-2 mb-2">메뉴</div>
+        <ul role="list" className="space-y-0.5">
+          {navItems.map((item) => (
+            <li key={item.to}>
+              <NavLink
+                to={item.to}
+                end={item.to === "/"}
+                onClick={onClose}
+                className={({ isActive }) =>
+                  cn(
+                    "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors cursor-pointer",
+                    isActive
+                      ? "bg-accent-400 text-white font-semibold"
+                      : "text-primary-200 hover:bg-primary-800 hover:text-white"
+                  )
+                }
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-current opacity-60 shrink-0" aria-hidden="true" />
+                <span>{item.label}</span>
+              </NavLink>
+            </li>
+          ))}
+        </ul>
+      </nav>
 
+      {/* Footer */}
+      <div className="px-5 py-4 border-t border-primary-800">
+        <div className="text-primary-400 text-[10px]">절약위원회 관리시스템</div>
+        <div className="text-primary-500 text-[10px] mt-0.5">v2.0 · 2026</div>
+      </div>
     </aside>
   );
 }
