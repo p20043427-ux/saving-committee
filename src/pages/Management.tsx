@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/Card";
-import { useOrganization, Building, Department } from "@/src/components/layout/OrganizationProvider";
+import { useOrganization } from "@/src/components/layout/OrganizationProvider";
+import { Button } from "@/src/components/ui/Button";
+import { Input, Select } from "@/src/components/ui/Input";
 
 export function Management() {
   const { buildings, departments, addBuilding, updateBuilding, deleteBuilding, addDepartment, updateDepartment, deleteDepartment } = useOrganization();
@@ -93,24 +95,21 @@ export function Management() {
             <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 items-end">
               <div className="flex flex-col space-y-1 w-full sm:w-auto">
                 <label className="text-xs font-semibold text-surface-500 uppercase">건물 코드 (ID)</label>
-                <input 
+                <Input
                   value={newBuildingId} onChange={(e) => setNewBuildingId(e.target.value)}
-                  placeholder="예: B04" className="w-full sm:w-32 px-3 py-2 border border-surface-300 rounded-md text-sm"
+                  placeholder="예: B04" className="sm:w-32"
                 />
               </div>
               <div className="flex flex-col space-y-1 w-full sm:w-auto flex-1">
                 <label className="text-xs font-semibold text-surface-500 uppercase">건물명</label>
-                <input 
+                <Input
                   value={newBuildingName} onChange={(e) => setNewBuildingName(e.target.value)}
-                  placeholder="예: 암센터" className="w-full px-3 py-2 border border-surface-300 rounded-md text-sm"
+                  placeholder="예: 암센터"
                 />
               </div>
-              <button 
-                onClick={handleAddBuilding}
-                className="w-full sm:w-auto px-4 py-2 bg-primary-600 text-white font-medium rounded-md text-sm hover:bg-primary-700 transition"
-              >
+              <Button variant="primary" size="md" onClick={handleAddBuilding} className="w-full sm:w-auto">
                 + 추가
-              </button>
+              </Button>
             </div>
 
             <div className="border border-surface-200 rounded-lg overflow-hidden">
@@ -137,17 +136,17 @@ export function Management() {
                           <span className="font-medium text-surface-900">{b.name}</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-right space-x-2">
+                      <td className="px-4 py-3 text-right">
                         {editBuildingId === b.id ? (
-                          <>
-                            <button onClick={() => handleSaveBuilding(b.id)} className="text-green-600 font-medium text-sm hover:underline">저장</button>
-                            <button onClick={() => setEditBuildingId(null)} className="text-surface-500 font-medium text-sm hover:underline">취소</button>
-                          </>
+                          <div className="flex items-center justify-end gap-2">
+                            <Button size="sm" variant="primary" onClick={() => handleSaveBuilding(b.id)}>저장</Button>
+                            <Button size="sm" variant="secondary" onClick={() => setEditBuildingId(null)}>취소</Button>
+                          </div>
                         ) : (
-                          <>
-                            <button onClick={() => { setEditBuildingId(b.id); setEditBuildingName(b.name); }} className="text-primary-600 font-medium text-sm hover:underline">수정</button>
-                            <button onClick={() => handleDeleteBuilding(b.id)} className="text-red-500 font-medium text-sm hover:underline">삭제</button>
-                          </>
+                          <div className="flex items-center justify-end gap-2">
+                            <Button size="sm" variant="ghost" onClick={() => { setEditBuildingId(b.id); setEditBuildingName(b.name); }}>수정</Button>
+                            <Button size="sm" variant="danger" onClick={() => handleDeleteBuilding(b.id)}>삭제</Button>
+                          </div>
                         )}
                       </td>
                     </tr>
@@ -171,36 +170,30 @@ export function Management() {
             <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 items-end">
               <div className="flex flex-col space-y-1 w-full sm:w-auto">
                 <label className="text-xs font-semibold text-surface-500 uppercase">부서 코드 (ID)</label>
-                <input 
+                <Input
                   value={newDeptId} onChange={(e) => setNewDeptId(e.target.value)}
-                  placeholder="예: D99" className="w-full sm:w-28 px-3 py-2 border border-surface-300 rounded-md text-sm"
+                  placeholder="예: D99" className="sm:w-28"
                 />
               </div>
               <div className="flex flex-col space-y-1 w-full sm:w-auto">
                 <label className="text-xs font-semibold text-surface-500 uppercase">소속 건물</label>
-                <select 
-                  value={newDeptBld} onChange={(e) => setNewDeptBld(e.target.value)}
-                  className="w-full sm:w-32 px-3 py-2 border border-surface-300 rounded-md text-sm bg-white"
-                >
+                <Select value={newDeptBld} onChange={(e) => setNewDeptBld(e.target.value)} className="sm:w-32">
                   <option value="">선택</option>
                   {buildings.map(b => (
                     <option key={b.id} value={b.id}>{b.name}</option>
                   ))}
-                </select>
+                </Select>
               </div>
               <div className="flex flex-col space-y-1 w-full sm:w-auto flex-1">
                 <label className="text-xs font-semibold text-surface-500 uppercase">부서명</label>
-                <input 
+                <Input
                   value={newDeptName} onChange={(e) => setNewDeptName(e.target.value)}
-                  placeholder="예: 새로운 부서" className="w-full px-3 py-2 border border-surface-300 rounded-md text-sm"
+                  placeholder="예: 새로운 부서"
                 />
               </div>
-              <button 
-                onClick={handleAddDept}
-                className="w-full sm:w-auto px-4 py-2 bg-primary-600 text-white font-medium rounded-md text-sm hover:bg-primary-700 transition"
-              >
+              <Button variant="primary" size="md" onClick={handleAddDept} className="w-full sm:w-auto">
                 + 추가
-              </button>
+              </Button>
             </div>
 
             <div className="border border-surface-200 rounded-lg overflow-hidden h-[500px] overflow-y-auto">
@@ -243,17 +236,17 @@ export function Management() {
                           <span className="font-medium text-surface-900">{d.name}</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-right space-x-2">
+                      <td className="px-4 py-3 text-right">
                         {editDeptId === d.id ? (
-                          <>
-                            <button onClick={() => handleSaveDept(d.id)} className="text-green-600 font-medium text-sm hover:underline">저장</button>
-                            <button onClick={() => setEditDeptId(null)} className="text-surface-500 font-medium text-sm hover:underline">취소</button>
-                          </>
+                          <div className="flex items-center justify-end gap-2">
+                            <Button size="sm" variant="primary" onClick={() => handleSaveDept(d.id)}>저장</Button>
+                            <Button size="sm" variant="secondary" onClick={() => setEditDeptId(null)}>취소</Button>
+                          </div>
                         ) : (
-                          <>
-                            <button onClick={() => { setEditDeptId(d.id); setEditDeptName(d.name); setEditDeptBld(d.buildingId); }} className="text-primary-600 font-medium text-sm hover:underline">수정</button>
-                            <button onClick={() => handleDeleteDept(d.id)} className="text-red-500 font-medium text-sm hover:underline">삭제</button>
-                          </>
+                          <div className="flex items-center justify-end gap-2">
+                            <Button size="sm" variant="ghost" onClick={() => { setEditDeptId(d.id); setEditDeptName(d.name); setEditDeptBld(d.buildingId); }}>수정</Button>
+                            <Button size="sm" variant="danger" onClick={() => handleDeleteDept(d.id)}>삭제</Button>
+                          </div>
                         )}
                       </td>
                     </tr>

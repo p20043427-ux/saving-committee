@@ -4,6 +4,8 @@ import { supabase } from "@/src/lib/supabase";
 import { computeStatus } from "@/src/lib/db";
 import { useAuth } from "@/src/components/auth/AuthProvider";
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
+import { Button } from "@/src/components/ui/Button";
+import { Select, Textarea } from "@/src/components/ui/Input";
 
 interface InlineInputFormProps {
   buildingId: string;
@@ -101,23 +103,19 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
       <div className="text-sm font-bold text-surface-900 border-b border-surface-200 pb-2">점검표 입력 ({inspectionDate})</div>
       
       {errorMessage && (
-        <div className="p-3 my-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+        <div role="alert" className="p-3 my-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
           {errorMessage}
         </div>
       )}
 
       <div className="space-y-2 text-sm">
         <label className="font-medium text-surface-700">점검자 성명</label>
-        <select 
-          className="w-full rounded-md border border-surface-300 px-3 py-2 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none bg-white"
-          value={inspector}
-          onChange={(e) => setInspector(e.target.value)}
-        >
+        <Select value={inspector} onChange={(e) => setInspector(e.target.value)}>
           <option value="">점검자를 선택하세요</option>
           {members.map(m => (
             <option key={m.id} value={m.name}>{m.name}</option>
           ))}
-        </select>
+        </Select>
       </div>
 
       <div className="space-y-4">
@@ -148,13 +146,12 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
 
       <div className="space-y-2 text-sm">
         <label className="font-medium text-surface-700">특이사항</label>
-        <textarea 
-          rows={2} 
-          className="w-full rounded-md border border-surface-300 p-2 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none bg-white resize-none"
+        <Textarea
+          rows={2}
           placeholder="특이사항 기재"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-        ></textarea>
+        />
       </div>
 
       {successMsg && (
@@ -164,12 +161,12 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
       )}
 
       <div className="flex justify-end space-x-2 pt-2">
-        <button type="button" onClick={onCancel} className="px-3 py-1.5 rounded-lg border border-surface-300 text-surface-700 font-medium text-sm hover:bg-surface-100 transition-colors" disabled={isSubmitting}>
+        <Button type="button" variant="secondary" onClick={onCancel} disabled={isSubmitting}>
           취소
-        </button>
-        <button type="submit" disabled={isSubmitting} className="px-3 py-1.5 rounded-lg bg-surface-900 text-white font-medium text-sm hover:bg-surface-800 transition-colors disabled:opacity-50">
+        </Button>
+        <Button type="submit" variant="primary" disabled={isSubmitting}>
           {isSubmitting ? "전송 중..." : "등록 🚀"}
-        </button>
+        </Button>
       </div>
     </form>
   );

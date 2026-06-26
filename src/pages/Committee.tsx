@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/src/lib/supabase";
 import { liveQuery } from "@/src/lib/db";
+import { Button } from "@/src/components/ui/Button";
+import { Input } from "@/src/components/ui/Input";
 
 export interface CommitteeMember {
   id: string;
@@ -118,12 +120,9 @@ export function Committee() {
           <h1 className="text-2xl font-bold tracking-tight text-surface-900 border-l-4 border-primary-500 pl-3">위원회 명단 관리</h1>
           <p className="text-surface-500 text-sm mt-1">환경/에너지 관리 위원회 명단을 관리합니다.</p>
         </div>
-        <button
-          onClick={() => setIsFormOpen(true)}
-          className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium shadow-sm transition-colors"
-        >
+        <Button variant="primary" size="md" onClick={() => setIsFormOpen(true)}>
           + 위원 추가
-        </button>
+        </Button>
       </div>
 
       {isFormOpen && (
@@ -133,32 +132,29 @@ export function Committee() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-surface-700 mb-1">이름</label>
-                <input
+                <Input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full rounded-md border border-surface-300 px-3 py-2 text-surface-900 focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
                   placeholder="예: 홍길동"
                   required
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-surface-700 mb-1">소속 부서/직책</label>
-                <input
+                <Input
                   type="text"
                   value={formData.department}
                   onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                  className="w-full rounded-md border border-surface-300 px-3 py-2 text-surface-900 focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
                   placeholder="예: 총무팀장"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-surface-700 mb-1">위원회 역할</label>
-                <input
+                <Input
                   type="text"
                   value={formData.role}
                   onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                  className="w-full rounded-md border border-surface-300 px-3 py-2 text-surface-900 focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
                   placeholder="예: 점검위원"
                 />
               </div>
@@ -175,19 +171,12 @@ export function Committee() {
               </div>
             </div>
             <div className="flex justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={resetForm}
-                className="px-4 py-2 text-surface-600 bg-surface-100 hover:bg-surface-200 rounded-md font-medium transition-colors"
-              >
+              <Button type="button" variant="secondary" size="md" onClick={resetForm}>
                 취소
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-md font-medium transition-colors"
-              >
+              </Button>
+              <Button type="submit" variant="primary" size="md">
                 {editingId ? "수정완료" : "추가완료"}
-              </button>
+              </Button>
             </div>
           </form>
         </div>
@@ -226,34 +215,14 @@ export function Committee() {
                     {deletingId === member.id ? (
                       <div className="flex items-center justify-end gap-2">
                         <span className="text-xs text-red-600 font-medium">삭제할까요?</span>
-                        <button
-                          onClick={() => handleDelete(member.id)}
-                          className="px-2 py-1 text-white bg-red-600 rounded text-xs hover:bg-red-700 transition-colors"
-                        >
-                          네
-                        </button>
-                        <button
-                          onClick={() => setDeletingId(null)}
-                          className="px-2 py-1 text-surface-600 bg-surface-100 rounded text-xs hover:bg-surface-200 transition-colors"
-                        >
-                          아니요
-                        </button>
+                        <Button size="sm" variant="danger" onClick={() => handleDelete(member.id)}>네</Button>
+                        <Button size="sm" variant="secondary" onClick={() => setDeletingId(null)}>아니요</Button>
                       </div>
                     ) : (
-                      <>
-                        <button
-                          onClick={() => handleEdit(member)}
-                          className="px-2 py-1 text-primary-600 bg-primary-50 rounded text-xs hover:bg-primary-100 mr-2 transition-colors"
-                        >
-                          수정
-                        </button>
-                        <button
-                          onClick={() => setDeletingId(member.id)}
-                          className="px-2 py-1 text-red-600 bg-red-50 rounded text-xs hover:bg-red-100 transition-colors"
-                        >
-                          삭제
-                        </button>
-                      </>
+                      <div className="flex items-center justify-end gap-2">
+                        <Button size="sm" variant="ghost" onClick={() => handleEdit(member)}>수정</Button>
+                        <Button size="sm" variant="danger" onClick={() => setDeletingId(member.id)}>삭제</Button>
+                      </div>
                     )}
                   </td>
                 </tr>
