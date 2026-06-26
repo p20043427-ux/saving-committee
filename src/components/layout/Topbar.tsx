@@ -1,10 +1,38 @@
-import { Menu } from "lucide-react";
+import { Menu, LogOut } from "lucide-react";
+import { useLocation, useNavigate } from "react-router";
+import { useAuth } from "@/src/components/auth/AuthProvider";
 
 interface TopbarProps {
   onToggleMenu?: () => void;
 }
 
+const PAGE_LABELS: Record<string, string> = {
+  "/": "대시보드",
+  "/monitoring": "점검 조회/입력",
+  "/data-management": "점검 데이터 관리",
+  "/schedule": "점검 스케줄",
+  "/committee": "위원회 명단 관리",
+  "/events": "월별 행사 관리",
+  "/management": "건물/부서 코드 관리",
+  "/yearly-report": "연간 분석 리포트",
+  "/admin": "시스템 설정",
+};
+
 export function Topbar({ onToggleMenu }: TopbarProps) {
+  const { user, logout } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const pageLabel = PAGE_LABELS[location.pathname] ?? "절약위원회";
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login");
+  };
+
+  const initials = user?.name
+    ? user.name.slice(0, 1)
+    : user?.email?.slice(0, 1).toUpperCase() ?? "관";
+
   return (
     <header className="flex justify-between items-center shrink-0 bg-white border-b border-surface-200 px-6 py-0 h-14 -mx-4 md:-mx-8 -mt-4 md:-mt-8 mb-6">
       <div className="flex items-center gap-3">
@@ -16,11 +44,13 @@ export function Topbar({ onToggleMenu }: TopbarProps) {
         >
           <Menu className="w-5 h-5" aria-hidden="true" />
         </button>
-        <div className="flex items-center gap-2">
-          <span className="text-primary-700 font-bold text-base">절약위원회</span>
-          <span className="hidden sm:inline text-surface-300 text-sm">|</span>
-          <span className="hidden sm:inline text-surface-500 text-xs">에너지 점검 관리 시스템</span>
-        </div>
+
+        {/* Breadcrumb */}
+        <nav aria-label="현재 위치" className="flex items-center gap-1.5 text-sm">
+          <span className="text-surface-400 hidden sm:inline">절약위원회</span>
+          <span className="text-surface-300 hidden sm:inline">/</span>
+          <span className="text-primary-700 font-semibold">{pageLabel}</span>
+        </nav>
       </div>
 
       <div className="flex items-center gap-3">
@@ -36,10 +66,29 @@ export function Topbar({ onToggleMenu }: TopbarProps) {
           </span>
           <span className="font-medium text-accent-600">시스템 정상</span>
         </div>
+
         <div className="h-5 w-px bg-surface-200 hidden sm:block" aria-hidden="true" />
-        <div className="w-7 h-7 rounded-full bg-primary-700 flex items-center justify-center text-white text-xs font-bold" aria-label="사용자">
-          관
+
+        {user?.name && (
+          <span className="hidden md:inline text-xs text-surface-500">{user.name}</span>
+        )}
+
+        <div
+          className="w-7 h-7 rounded-full bg-primary-700 flex items-center justify-center text-white text-xs font-bold cursor-default"
+          aria-label={`사용자: ${user?.name ?? user?.email ?? "관리자"}`}
+          title={user?.email ?? ""}
+        >
+          {initials}
         </div>
+
+        <button
+          onClick={handleLogout}
+          aria-label="로그아웃"
+          className="p-1.5 text-surface-400 hover:text-danger-600 hover:bg-danger-50 rounded transition-colors"
+          title="로그아웃"
+        >
+          <LogOut className="w-4 h-4" aria-hidden="true" />
+        </button>
       </div>
     </header>
   );

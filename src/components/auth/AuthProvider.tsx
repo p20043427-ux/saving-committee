@@ -1,17 +1,17 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/src/lib/supabase';
 
-// 기존 Firebase User 인터페이스에서 앱이 실제로 쓰는 필드는 uid 뿐이므로 최소 형태로 유지한다.
 interface AppUser {
   uid: string;
   email?: string | null;
+  name?: string | null;
 }
 
 interface AuthContextType {
   user: AppUser | null;
   loading: boolean;
   signIn: (email: string, pass: string) => Promise<void>;
-  signUp: (email: string, pass: string) => Promise<void>;
+  signUp: (email: string, pass: string, name: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -25,20 +25,27 @@ const AuthContext = createContext<AuthContextType>({
 
 export const useAuth = () => useContext(AuthContext);
 
+function toAppUser(u: { id: string; email?: string | null; user_metadata?: Record<string, unknown> } | undefined): AppUser | null {
+  if (!u) return null;
+  return {
+    uid: u.id,
+    email: u.email,
+    name: (u.user_metadata?.name as string) ?? null,
+  };
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      const u = data.session?.user;
-      setUser(u ? { uid: u.id, email: u.email } : null);
+      setUser(toAppUser(data.session?.user));
       setLoading(false);
     });
 
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      const u = session?.user;
-      setUser(u ? { uid: u.id, email: u.email } : null);
+      setUser(toAppUser(session?.user));
       setLoading(false);
     });
 
@@ -50,8 +57,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) throw error;
   };
 
-  const signUp = async (email: string, pass: string) => {
-    const { error } = await supabase.auth.signUp({ email, password: pass });
+  const signUp = async (email: string, pass: string, name: string) => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password: pass,
+      options: { data: { name } },
+    });
     if (error) throw error;
   };
 

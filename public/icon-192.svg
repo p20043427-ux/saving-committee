@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <rect width="192" height="192" rx="32" fill="#1b3f8b"/>
+  <rect x="56" y="80" width="80" height="12" rx="6" fill="#2aafa0"/>
+  <rect x="90" y="46" width="12" height="80" rx="6" fill="#2aafa0"/>
+  <text x="96" y="158" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="18" font-family="sans-serif" font-weight="600">절약위원회</text>
+</svg>

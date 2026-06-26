@@ -1,10 +1,5 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
-import React, { useState } from "react";
-import { BrowserRouter, Routes, Route } from "react-router";
+import React from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router";
 import { AppLayout } from "./components/layout/AppLayout";
 import { Dashboard } from "./pages/Dashboard";
 import { Monitoring } from "./pages/Monitoring";
@@ -15,31 +10,31 @@ import { DataManagement } from "./pages/DataManagement";
 import { Committee } from "./pages/Committee";
 import { Schedule } from "./pages/Schedule";
 import { Events } from "./pages/Events";
+import { Login } from "./pages/Login";
+import { SignUp } from "./pages/SignUp";
 import { AuthProvider, useAuth } from "./components/auth/AuthProvider";
 import { OrganizationProvider } from "./components/layout/OrganizationProvider";
+import { InstallPrompt, IOSInstallGuide } from "./components/ui/InstallPrompt";
 
-function AppRoutes() {
-  const { loading } = useAuth();
+function ProtectedRoutes() {
+  const { user, loading } = useAuth();
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center text-surface-500">Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-primary-900">
+        <div className="text-center">
+          <div className="w-12 h-12 bg-accent-400 rounded-xl flex items-center justify-center text-white font-bold text-xl mx-auto mb-3">좋</div>
+          <p className="text-primary-300 text-sm">시스템 초기화 중...</p>
+        </div>
+      </div>
+    );
   }
+
+  if (!user) return <Navigate to="/login" replace />;
 
   return (
     <OrganizationProvider>
-      <Routes>
-        <Route path="/" element={<AppLayout />}>
-          <Route index element={<Dashboard />} />
-          <Route path="monitoring" element={<Monitoring />} />
-          <Route path="data-management" element={<DataManagement />} />
-          <Route path="committee" element={<Committee />} />
-          <Route path="schedule" element={<Schedule />} />
-          <Route path="events" element={<Events />} />
-          <Route path="management" element={<Management />} />
-          <Route path="yearly-report" element={<YearlyReport />} />
-          <Route path="admin" element={<Admin />} />
-        </Route>
-      </Routes>
+      <AppLayout />
     </OrganizationProvider>
   );
 }
@@ -48,7 +43,23 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AppRoutes />
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<SignUp />} />
+          <Route path="/" element={<ProtectedRoutes />}>
+            <Route index element={<Dashboard />} />
+            <Route path="monitoring" element={<Monitoring />} />
+            <Route path="data-management" element={<DataManagement />} />
+            <Route path="committee" element={<Committee />} />
+            <Route path="schedule" element={<Schedule />} />
+            <Route path="events" element={<Events />} />
+            <Route path="management" element={<Management />} />
+            <Route path="yearly-report" element={<YearlyReport />} />
+            <Route path="admin" element={<Admin />} />
+          </Route>
+        </Routes>
+        <InstallPrompt />
+        <IOSInstallGuide />
       </AuthProvider>
     </BrowserRouter>
   );
