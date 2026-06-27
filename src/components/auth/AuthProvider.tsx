@@ -11,7 +11,7 @@ interface AuthContextType {
   user: AppUser | null;
   loading: boolean;
   signIn: (email: string, pass: string) => Promise<void>;
-  signUp: (email: string, pass: string, name: string) => Promise<void>;
+  signUp: (email: string, pass: string, name: string) => Promise<boolean>;
   logout: () => Promise<void>;
 }
 
@@ -19,7 +19,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
   signIn: async () => {},
-  signUp: async () => {},
+  signUp: async () => false,
   logout: async () => {},
 });
 
@@ -57,13 +57,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) throw error;
   };
 
-  const signUp = async (email: string, pass: string, name: string) => {
-    const { error } = await supabase.auth.signUp({
+  // 반환값: true = 이메일 인증 없이 즉시 로그인됨, false = 이메일 인증 필요
+  const signUp = async (email: string, pass: string, name: string): Promise<boolean> => {
+    const { data, error } = await supabase.auth.signUp({
       email,
       password: pass,
       options: { data: { name } },
     });
     if (error) throw error;
+    return !!data.session;
   };
 
   const logout = async () => {

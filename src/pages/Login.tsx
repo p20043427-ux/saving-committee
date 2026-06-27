@@ -20,8 +20,17 @@ export function Login() {
     try {
       await signIn(email, password);
       navigate("/");
-    } catch {
-      setError("이메일 또는 비밀번호가 올바르지 않습니다.");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "";
+      if (msg.includes("Email not confirmed")) {
+        setError("이메일 인증이 완료되지 않았습니다. 받은 편지함을 확인해 주세요.");
+      } else if (msg.includes("Invalid login credentials") || msg.includes("invalid_credentials")) {
+        setError("이메일 또는 비밀번호가 올바르지 않습니다.");
+      } else if (msg.includes("Too many requests")) {
+        setError("로그인 시도가 너무 많습니다. 잠시 후 다시 시도해 주세요.");
+      } else {
+        setError("로그인 중 오류가 발생했습니다. 다시 시도해 주세요.");
+      }
     } finally {
       setIsLoading(false);
     }

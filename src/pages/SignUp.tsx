@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router";
 import { useAuth } from "@/src/components/auth/AuthProvider";
 import { Input } from "@/src/components/ui/Input";
 import { Button } from "@/src/components/ui/Button";
+import { HospitalLogo } from "@/src/components/ui/HospitalLogo";
 
 export function SignUp() {
   const { signUp } = useAuth();
@@ -12,7 +13,7 @@ export function SignUp() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
+  const [needsEmailConfirm, setNeedsEmailConfirm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -25,17 +26,31 @@ export function SignUp() {
 
     setIsLoading(true);
     try {
-      await signUp(email, password, name);
-      setSuccess(true);
+      const autoLoggedIn = await signUp(email, password, name);
+      if (autoLoggedIn) {
+        // 이메일 인증 없이 즉시 세션 생성 → 대시보드로 이동
+        navigate("/");
+      } else {
+        // 이메일 인증 필요
+        setNeedsEmailConfirm(true);
+      }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "회원가입 중 오류가 발생했습니다.";
-      setError(msg);
+      const msg = err instanceof Error ? err.message : "";
+      if (msg.includes("User already registered") || msg.includes("already been registered")) {
+        setError("이미 가입된 이메일입니다. 로그인 화면으로 이동해 주세요.");
+      } else if (msg.includes("Password should be")) {
+        setError("비밀번호는 6자 이상이어야 합니다.");
+      } else if (msg.includes("Invalid email")) {
+        setError("올바른 이메일 형식이 아닙니다.");
+      } else {
+        setError(msg || "회원가입 중 오류가 발생했습니다.");
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (success) {
+  if (needsEmailConfirm) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-surface-50 px-6">
         <div className="text-center max-w-sm">
@@ -44,7 +59,7 @@ export function SignUp() {
           </div>
           <h2 className="text-xl font-bold text-surface-900 mb-2">가입 완료</h2>
           <p className="text-surface-500 text-sm mb-6">
-            입력하신 이메일로 확인 메일이 발송되었습니다.<br />
+            <strong className="text-surface-700">{email}</strong>로 확인 메일이 발송되었습니다.<br />
             이메일 인증 후 로그인하세요.
           </p>
           <Button variant="primary" size="md" onClick={() => navigate("/login")}>
@@ -60,10 +75,10 @@ export function SignUp() {
       {/* Left panel */}
       <div className="hidden lg:flex w-[420px] shrink-0 bg-primary-900 flex-col justify-between p-10">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-accent-400 rounded-lg flex items-center justify-center text-white font-bold text-lg">좋</div>
+          <HospitalLogo size={48} showText={false} variant="symbol" />
           <div>
             <div className="text-white font-bold text-sm">좋은문화병원</div>
-            <div className="text-primary-300 text-[11px]">Energy Management</div>
+            <div className="text-primary-300 text-[11px]">은성의료재단</div>
           </div>
         </div>
         <div>
@@ -82,8 +97,11 @@ export function SignUp() {
       <div className="flex-1 flex items-center justify-center bg-surface-50 px-6">
         <div className="w-full max-w-sm">
           <div className="lg:hidden flex items-center gap-2 mb-8">
-            <div className="w-8 h-8 bg-primary-700 rounded-md flex items-center justify-center text-white font-bold text-sm">좋</div>
-            <span className="text-primary-800 font-bold">좋은문화병원 절약위원회</span>
+            <HospitalLogo size={36} showText={false} variant="symbol" />
+            <div>
+              <div className="text-primary-800 font-bold text-sm">좋은문화병원</div>
+              <div className="text-primary-500 text-[10px]">은성의료재단 절약위원회</div>
+            </div>
           </div>
 
           <h2 className="text-2xl font-bold text-surface-900 mb-1">회원가입</h2>
@@ -121,7 +139,9 @@ export function SignUp() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-surface-700 mb-1.5" htmlFor="password">비밀번호 <span className="text-surface-400 font-normal">(6자 이상)</span></label>
+              <label className="block text-sm font-medium text-surface-700 mb-1.5" htmlFor="password">
+                비밀번호 <span className="text-surface-400 font-normal">(6자 이상)</span>
+              </label>
               <Input
                 id="password"
                 type="password"
@@ -143,8 +163,17 @@ export function SignUp() {
                 required
                 autoComplete="new-password"
               />
+              {confirm && password !== confirm && (
+                <p className="text-xs text-danger-600 mt-1">비밀번호가 일치하지 않습니다.</p>
+              )}
             </div>
-            <Button type="submit" variant="primary" size="lg" className="w-full mt-2" disabled={isLoading}>
+            <Button
+              type="submit"
+              variant="primary"
+              size="lg"
+              className="w-full mt-2"
+              disabled={isLoading || (confirm.length > 0 && password !== confirm)}
+            >
               {isLoading ? "처리 중..." : "가입하기"}
             </Button>
           </form>
