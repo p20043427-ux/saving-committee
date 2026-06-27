@@ -16,6 +16,8 @@ import { SignUp } from "./pages/SignUp";
 import { AuthProvider, useAuth } from "./components/auth/AuthProvider";
 import { OrganizationProvider } from "./components/layout/OrganizationProvider";
 import { InstallPrompt, IOSInstallGuide } from "./components/ui/InstallPrompt";
+import { AppToaster } from "./components/ui/Toast";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 function ProtectedRoutes() {
   const { user, loading } = useAuth();
@@ -34,9 +36,11 @@ function ProtectedRoutes() {
   if (!user) return <Navigate to="/login" replace />;
 
   return (
-    <OrganizationProvider>
-      <AppLayout />
-    </OrganizationProvider>
+    <ErrorBoundary>
+      <OrganizationProvider>
+        <AppLayout />
+      </OrganizationProvider>
+    </ErrorBoundary>
   );
 }
 
@@ -59,6 +63,7 @@ export default function App() {
             <Route path="admin" element={<Admin />} />
           </Route>
         </Routes>
+        <AppToaster />
         <InstallPrompt />
         <IOSInstallGuide />
       </AuthProvider>

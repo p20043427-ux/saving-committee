@@ -1,17 +1,21 @@
 import { NavLink } from "react-router";
 import { cn } from "@/src/lib/utils";
 import { HospitalLogo } from "@/src/components/ui/HospitalLogo";
+import {
+  LayoutDashboard, ClipboardList, Database, Calendar,
+  Users, PartyPopper, Building2, BarChart3, Settings
+} from "lucide-react";
 
 const navItems = [
-  { to: "/", icon: "◈", label: "대시보드" },
-  { to: "/monitoring", icon: "◉", label: "점검 조회/입력" },
-  { to: "/data-management", icon: "◧", label: "점검 데이터 관리" },
-  { to: "/schedule", icon: "◫", label: "점검 스케줄" },
-  { to: "/committee", icon: "◎", label: "위원회 명단 관리" },
-  { to: "/events", icon: "◈", label: "월별 행사 관리" },
-  { to: "/management", icon: "◰", label: "건물/부서 코드 관리" },
-  { to: "/yearly-report", icon: "◈", label: "연간 분석 리포트" },
-  { to: "/admin", icon: "◍", label: "시스템 설정" },
+  { to: "/",                icon: LayoutDashboard, label: "대시보드" },
+  { to: "/monitoring",      icon: ClipboardList,   label: "점검 조회/입력" },
+  { to: "/data-management", icon: Database,        label: "점검 데이터 관리" },
+  { to: "/schedule",        icon: Calendar,        label: "점검 스케줄" },
+  { to: "/committee",       icon: Users,           label: "위원회 명단 관리" },
+  { to: "/events",          icon: PartyPopper,     label: "월별 행사 관리" },
+  { to: "/management",      icon: Building2,       label: "건물/부서 코드 관리" },
+  { to: "/yearly-report",   icon: BarChart3,       label: "연간 분석 리포트" },
+  { to: "/admin",           icon: Settings,        label: "시스템 설정" },
 ];
 
 interface SidebarProps {
@@ -57,7 +61,9 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                   )
                 }
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-current opacity-60 shrink-0" aria-hidden="true" />
+                <span className="shrink-0" aria-hidden="true">
+                  <item.icon size={16} />
+                </span>
                 <span>{item.label}</span>
               </NavLink>
             </li>

@@ -4,6 +4,9 @@ import { liveQuery, rowToRecord, computeStatus } from "@/src/lib/db";
 import { useAuth } from "@/src/components/auth/AuthProvider";
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
 import { Download, CalendarDays, BarChart2, ArrowUp, ArrowDown } from "lucide-react";
+import { toast } from "../components/ui/Toast";
+import { useConfirm } from "../hooks/useConfirm";
+import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 
 export interface RecordDoc {
   id: string;
@@ -52,6 +55,7 @@ export function DataManagement() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<RecordDoc>>({});
   const [isExporting, setIsExporting] = useState(false);
+  const { confirm, dialogProps } = useConfirm();
 
   // Sort State (Raw)
   type RawSortKey = 'date' | 'buildingName' | 'departmentName' | 'inspector' | 'lights' | 'water' | 'recycle' | 'focus' | 'totalScore' | 'status';
@@ -345,19 +349,19 @@ export function DataManagement() {
       setEditingId(null);
     } catch (error) {
       console.error("저장 오류:", error);
-      alert("문서 업데이트 중 오류가 발생했습니다.");
+      toast.error("문서 업데이트 중 오류가 발생했습니다.");
     }
   };
 
   const deleteRecord = async (id: string) => {
-    if (confirm("정말 이 데이터를 삭제하시겠습니까? (이 작업은 되돌릴 수 없습니다.)")) {
-      try {
-        const { error } = await supabase.from("sc_records").delete().eq("id", id);
-        if (error) throw error;
-      } catch (error) {
-        console.error("삭제 오류:", error);
-        alert("문서 삭제 중 오류가 발생했습니다.");
-      }
+    const ok = await confirm("데이터 삭제", "정말 이 데이터를 삭제하시겠습니까? (이 작업은 되돌릴 수 없습니다.)");
+    if (!ok) return;
+    try {
+      const { error } = await supabase.from("sc_records").delete().eq("id", id);
+      if (error) throw error;
+    } catch (error) {
+      console.error("삭제 오류:", error);
+      toast.error("문서 삭제 중 오류가 발생했습니다.");
     }
   };
 
@@ -656,6 +660,7 @@ export function DataManagement() {
           </div>
         </div>
       )}
+      <ConfirmDialog {...dialogProps} />
     </div>
   );
 }

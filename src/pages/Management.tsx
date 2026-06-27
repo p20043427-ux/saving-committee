@@ -3,10 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/Ca
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
 import { Button } from "@/src/components/ui/Button";
 import { Input, Select } from "@/src/components/ui/Input";
+import { toast } from "../components/ui/Toast";
+import { useConfirm } from "../hooks/useConfirm";
+import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 
 export function Management() {
   const { buildings, departments, addBuilding, updateBuilding, deleteBuilding, addDepartment, updateDepartment, deleteDepartment } = useOrganization();
   const [activeTab, setActiveTab] = useState<"buildings" | "departments">("buildings");
+  const { confirm, dialogProps } = useConfirm();
 
   // Building State
   const [editBuildingId, setEditBuildingId] = useState<string | null>(null);
@@ -36,9 +40,9 @@ export function Management() {
   };
 
   const handleDeleteBuilding = async (id: string) => {
-    if (confirm("정말로 이 건물을 삭제하시겠습니까? 관련된 부서 코드가 있다면 오류가 발생할 수 있습니다.")) {
-      await deleteBuilding(id);
-    }
+    const ok = await confirm("건물 삭제", "정말로 이 건물을 삭제하시겠습니까? 관련된 부서 코드가 있다면 오류가 발생할 수 있습니다.");
+    if (!ok) return;
+    await deleteBuilding(id);
   };
 
   const handleAddDept = async () => {
@@ -55,9 +59,9 @@ export function Management() {
   };
 
   const handleDeleteDept = async (id: string) => {
-    if (confirm("정말로 이 부서를 삭제하시겠습니까?")) {
-      await deleteDepartment(id);
-    }
+    const ok = await confirm("부서 삭제", "정말로 이 부서를 삭제하시겠습니까?");
+    if (!ok) return;
+    await deleteDepartment(id);
   };
 
   return (
@@ -260,6 +264,7 @@ export function Management() {
           </CardContent>
         </Card>
       )}
+      <ConfirmDialog {...dialogProps} />
     </div>
   );
 }

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "@/src/lib/supabase";
 import { liveQuery } from "@/src/lib/db";
 import { CommitteeMember } from "./Committee";
+import { toast } from "../components/ui/Toast";
 
 interface InspectionSchedule {
   id: string;
@@ -83,7 +84,7 @@ export function Schedule() {
       },
       (error) => {
         console.error("Error fetching schedules:", error);
-        alert(`스케줄 조회 오류: ${error.message}`);
+        toast.error(`스케줄 조회 오류: ${error.message}`);
         setIsLoading(false);
       }
     );
@@ -124,7 +125,7 @@ export function Schedule() {
       setDeletingId(null);
     } catch (error: any) {
       console.error("Error deleting member:", error);
-      alert("삭제 중 오류가 발생했습니다: " + error.message);
+      toast.error("삭제 중 오류가 발생했습니다: " + error.message);
     }
   };
 
@@ -154,7 +155,7 @@ export function Schedule() {
       resetForm();
     } catch (error) {
       console.error("Error saving schedule:", error);
-      alert(`저장 중 오류가 발생했습니다: ${error}`);
+      toast.error(`저장 중 오류가 발생했습니다: ${error}`);
     }
   };
 
@@ -164,7 +165,7 @@ export function Schedule() {
         return { ...prev, inspectors: prev.inspectors.filter(n => n !== memberName) };
       } else {
         if (prev.inspectors.length >= 2) {
-          alert("한 회차당 점검자는 최대 2명까지만 선택할 수 있습니다.");
+          toast.error("한 회차당 점검자는 최대 2명까지만 선택할 수 있습니다.");
           return prev;
         }
         return { ...prev, inspectors: [...prev.inspectors, memberName] };

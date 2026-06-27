@@ -7,6 +7,7 @@ import { useAuth } from "@/src/components/auth/AuthProvider";
 import { InlineInputForm } from "@/src/components/features/InlineInputForm";
 import { DatePickerWithData } from "@/src/components/features/DatePickerWithData";
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
+import { toast } from "../components/ui/Toast";
 
 interface RecordData {
   departmentId: string;
@@ -84,7 +85,7 @@ export function Monitoring() {
       },
       (error) => {
         console.error("Error fetching historical records:", error);
-        alert("데이터를 가져오는 중 오류가 발생했습니다. 권한이나 네트워크를 확인해주세요.");
+        toast.error("데이터를 가져오는 중 오류가 발생했습니다. 권한이나 네트워크를 확인해주세요.");
         setIsLoading(false);
       }
     );
@@ -113,7 +114,7 @@ export function Monitoring() {
       const filteredDocs: any[] = data || [];
 
       if (filteredDocs.length === 0) {
-        alert("해당 일자에 내보낼 점검 데이터가 없습니다.");
+        toast.error("해당 일자에 내보낼 점검 데이터가 없습니다.");
         setIsExporting(false);
         return;
       }
@@ -161,7 +162,7 @@ export function Monitoring() {
       
     } catch (error) {
       console.error("Export error:", error);
-      alert("데이터 내보내기 중 오류가 발생했습니다.");
+      toast.error("데이터 내보내기 중 오류가 발생했습니다.");
     } finally {
       setIsExporting(false);
     }

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "@/src/lib/supabase";
 import { liveQuery } from "@/src/lib/db";
 import { CommitteeMember } from "./Committee";
+import { toast } from "../components/ui/Toast";
 
 interface CommitteeEvent {
   id: string;
@@ -83,7 +84,7 @@ export function Events() {
       },
       (error) => {
         console.error("Error fetching events:", error);
-        alert(`행사 정보 조회 오류: ${error.message}`);
+        toast.error(`행사 정보 조회 오류: ${error.message}`);
         setIsLoading(false);
       }
     );
@@ -124,14 +125,14 @@ export function Events() {
       setDeletingId(null);
     } catch (error: any) {
       console.error("Error deleting event:", error);
-      alert("삭제 중 오류가 발생했습니다: " + error.message);
+      toast.error("삭제 중 오류가 발생했습니다: " + error.message);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.date || !formData.title.trim()) {
-      alert("일자 및 행사명을 입력해주세요.");
+      toast.error("일자 및 행사명을 입력해주세요.");
       return;
     }
     
@@ -156,7 +157,7 @@ export function Events() {
       resetForm();
     } catch (error: any) {
       console.error("Error saving event:", error);
-      alert(`저장 중 오류가 발생했습니다: ${error.message}`);
+      toast.error(`저장 중 오류가 발생했습니다: ${error.message}`);
     }
   };
 

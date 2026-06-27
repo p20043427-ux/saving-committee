@@ -3,6 +3,7 @@ import { supabase } from "@/src/lib/supabase";
 import { liveQuery } from "@/src/lib/db";
 import { Button } from "@/src/components/ui/Button";
 import { Input } from "@/src/components/ui/Input";
+import { toast } from "../components/ui/Toast";
 
 export interface CommitteeMember {
   id: string;
@@ -69,7 +70,7 @@ export function Committee() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim()) {
-      alert("이름을 입력해주세요.");
+      toast.error("이름을 입력해주세요.");
       return;
     }
 
@@ -94,7 +95,7 @@ export function Committee() {
       resetForm();
     } catch (error: any) {
       console.error("Error saving member:", error);
-      alert("직원 정보를 저장하는 중 오류가 발생했습니다: " + error.message);
+      toast.error("직원 정보를 저장하는 중 오류가 발생했습니다: " + error.message);
     }
   };
 
@@ -105,7 +106,7 @@ export function Committee() {
       setDeletingId(null);
     } catch (error: any) {
       console.error("Error deleting member:", error);
-      alert("삭제 중 오류가 발생했습니다: " + error.message);
+      toast.error("삭제 중 오류가 발생했습니다: " + error.message);
     }
   };
 

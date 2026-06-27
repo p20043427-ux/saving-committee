@@ -4,6 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/Ca
 import { Button } from "@/src/components/ui/Button";
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
 import { supabase } from "@/src/lib/supabase";
+import { toast } from "../components/ui/Toast";
+import { useConfirm } from "../hooks/useConfirm";
+import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 
 interface InspectionItem {
   id: string;
@@ -23,6 +26,7 @@ export function Admin() {
     deleteBuilding,
   } = useOrganization();
   const [isExporting, setIsExporting] = useState(false);
+  const { confirm, dialogProps } = useConfirm();
   const [isImporting, setIsImporting] = useState(false);
   const [importResult, setImportResult] = useState<{ ok: boolean; msg: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -47,7 +51,8 @@ export function Admin() {
   };
 
   const handleDeleteBuilding = async (id: string) => {
-    if (!confirm(`건물 ${id}를 삭제하시겠습니까? 관련 부서 데이터에 영향이 있을 수 있습니다.`)) return;
+    const ok = await confirm("건물 삭제", `건물 ${id}를 삭제하시겠습니까? 관련 부서 데이터에 영향이 있을 수 있습니다.`);
+    if (!ok) return;
     await deleteBuilding(id);
   };
 
@@ -103,7 +108,8 @@ export function Admin() {
   };
 
   const deleteItem = async (id: string) => {
-    if (!confirm("이 항목을 삭제하시겠습니까?")) return;
+    const ok = await confirm("항목 삭제", "이 항목을 삭제하시겠습니까?");
+    if (!ok) return;
     await supabase.from("sc_inspection_items").delete().eq("id", id);
     fetchItems();
   };
@@ -455,6 +461,7 @@ export function Admin() {
           </CardContent>
         </Card>
       </div>
+      <ConfirmDialog {...dialogProps} />
     </div>
   );
 }
