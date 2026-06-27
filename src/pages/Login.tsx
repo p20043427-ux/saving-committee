@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router";
 import { useAuth } from "@/src/components/auth/AuthProvider";
 import { Input } from "@/src/components/ui/Input";
 import { Button } from "@/src/components/ui/Button";
+import { HospitalLogo } from "@/src/components/ui/HospitalLogo";
 
 export function Login() {
   const { signIn } = useAuth();
@@ -31,10 +32,10 @@ export function Login() {
       {/* Left panel */}
       <div className="hidden lg:flex w-[420px] shrink-0 bg-primary-900 flex-col justify-between p-10">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-accent-400 rounded-lg flex items-center justify-center text-white font-bold text-lg">좋</div>
+          <HospitalLogo size={48} showText={false} variant="symbol" />
           <div>
             <div className="text-white font-bold text-sm">좋은문화병원</div>
-            <div className="text-primary-300 text-[11px]">Energy Management</div>
+            <div className="text-primary-300 text-[11px]">은성의료재단</div>
           </div>
         </div>
         <div>
@@ -61,8 +62,11 @@ export function Login() {
       <div className="flex-1 flex items-center justify-center bg-surface-50 px-6">
         <div className="w-full max-w-sm">
           <div className="lg:hidden flex items-center gap-2 mb-8">
-            <div className="w-8 h-8 bg-primary-700 rounded-md flex items-center justify-center text-white font-bold text-sm">좋</div>
-            <span className="text-primary-800 font-bold">좋은문화병원 절약위원회</span>
+            <HospitalLogo size={36} showText={false} variant="symbol" />
+            <div>
+              <div className="text-primary-800 font-bold text-sm">좋은문화병원</div>
+              <div className="text-primary-500 text-[10px]">은성의료재단 절약위원회</div>
+            </div>
           </div>
 
           <h2 className="text-2xl font-bold text-surface-900 mb-1">로그인</h2>

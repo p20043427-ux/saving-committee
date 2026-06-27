@@ -1,4 +1,5 @@
 import React from "react";
+import { HospitalLogo } from "./components/ui/HospitalLogo";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router";
 import { AppLayout } from "./components/layout/AppLayout";
 import { Dashboard } from "./pages/Dashboard";
@@ -22,8 +23,8 @@ function ProtectedRoutes() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-primary-900">
-        <div className="text-center">
-          <div className="w-12 h-12 bg-accent-400 rounded-xl flex items-center justify-center text-white font-bold text-xl mx-auto mb-3">좋</div>
+        <div className="text-center flex flex-col items-center gap-3">
+          <HospitalLogo size={64} showText={false} variant="symbol" />
           <p className="text-primary-300 text-sm">시스템 초기화 중...</p>
         </div>
       </div>

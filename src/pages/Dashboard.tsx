@@ -2,147 +2,308 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/Card";
 import { supabase } from "@/src/lib/supabase";
-import { useAuth } from "@/src/components/auth/AuthProvider";
+import { liveQuery } from "@/src/lib/db";
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
 
+interface ScheduleRow {
+  id: string;
+  date: string;
+  turn: number;
+  inspectors: string[];
+  month: string;
+}
+
+interface EventRow {
+  id: string;
+  date: string;
+  title: string;
+  attendees: string[];
+  month: string;
+}
+
+interface RecordSummary {
+  department_id: string;
+  status: string;
+  total_score: number;
+}
+
 export function Dashboard() {
-  const { user } = useAuth();
-  const { isLoading: orgLoading } = useOrganization();
-  const [schedules, setSchedules] = useState<any[]>([]);
-  const [events, setEvents] = useState<any[]>([]);
+  const { departments, buildings, isLoading: orgLoading } = useOrganization();
+  const [schedules, setSchedules] = useState<ScheduleRow[]>([]);
+  const [events, setEvents] = useState<EventRow[]>([]);
+  const [todayRecords, setTodayRecords] = useState<RecordSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const today = new Date().toISOString().split("T")[0];
+  const currentMonth = today.slice(0, 7);
+
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      setIsLoading(true);
-      try {
-        // Fetch schedules & events for the current month
-        const currentMonth = new Date().toISOString().slice(0, 7);
-        
-        // Schedules
-        const { data: schedData } = await supabase
+    const unsubs: Array<() => void> = [];
+
+    const unsubSchedules = liveQuery<ScheduleRow>(
+      "sc_schedules",
+      () =>
+        supabase
           .from("sc_schedules")
           .select("*")
-          .eq("month", currentMonth);
-        const fetchedSchedules = (schedData || []).map((s: any) => ({
-          ...s,
-          inspectors: s.inspectors || [],
-        }));
-        fetchedSchedules.sort((a, b) => a.date.localeCompare(b.date));
-        setSchedules(fetchedSchedules);
+          .eq("month", currentMonth)
+          .order("date", { ascending: true }),
+      (rows) => {
+        setSchedules(rows.map((s) => ({ ...s, inspectors: s.inspectors || [] })));
+      }
+    );
+    unsubs.push(unsubSchedules);
 
-        // Events
-        const { data: eventData } = await supabase
+    const unsubEvents = liveQuery<EventRow>(
+      "sc_events",
+      () =>
+        supabase
           .from("sc_events")
           .select("*")
-          .eq("month", currentMonth);
-        const fetchedEvents = (eventData || []).map((e: any) => ({
-          ...e,
-          attendees: e.attendees || [],
-        }));
-        fetchedEvents.sort((a, b) => a.date.localeCompare(b.date));
-        setEvents(fetchedEvents);
-
-      } catch (error) {
-        console.error("Error fetching dashboard data:", error);
-      } finally {
-        setIsLoading(false);
+          .eq("month", currentMonth)
+          .order("date", { ascending: true }),
+      (rows) => {
+        setEvents(rows.map((e) => ({ ...e, attendees: e.attendees || [] })));
       }
-    };
+    );
+    unsubs.push(unsubEvents);
 
-    fetchDashboardData();
-  }, []);
+    const startOfDay = today + "T00:00:00";
+    const endOfDay = today + "T23:59:59.999Z";
+
+    const unsubRecords = liveQuery<RecordSummary>(
+      "sc_records",
+      () =>
+        supabase
+          .from("sc_records")
+          .select("department_id, status, total_score")
+          .gte("date", startOfDay)
+          .lte("date", endOfDay),
+      (rows) => {
+        setTodayRecords(rows);
+        setIsLoading(false);
+      },
+      () => setIsLoading(false)
+    );
+    unsubs.push(unsubRecords);
+
+    return () => unsubs.forEach((u) => u());
+  }, [today, currentMonth]);
+
+  const totalDepts = departments.length;
+  const inspectedCount = todayRecords.length;
+  const progressPct = totalDepts > 0 ? Math.round((inspectedCount / totalDepts) * 100) : 0;
+  const normalCount = todayRecords.filter((r) => r.status === "정상").length;
+  const warningCount = todayRecords.filter((r) => r.status === "주의").length;
+  const urgentCount = todayRecords.filter((r) => r.status === "긴급").length;
+  const avgScore =
+    inspectedCount > 0
+      ? Math.round((todayRecords.reduce((s, r) => s + r.total_score, 0) / inspectedCount) * 10) / 10
+      : null;
+
+  const mobileNavItems = [
+    { to: "/monitoring", label: "점검 조회/입력", color: "bg-primary-100 text-primary-700" },
+    { to: "/data-management", label: "점검 데이터", color: "bg-info-100 text-info-700" },
+    { to: "/schedule", label: "점검 스케줄", color: "bg-success-100 text-success-700" },
+    { to: "/committee", label: "명단 관리", color: "bg-warning-100 text-warning-700" },
+    { to: "/events", label: "월별 행사", color: "bg-danger-100 text-danger-700" },
+    { to: "/management", label: "코드 관리", color: "bg-surface-100 text-surface-700" },
+    { to: "/yearly-report", label: "연간 리포트", color: "bg-success-50 text-success-600" },
+    { to: "/admin", label: "시스템 설정", color: "bg-surface-50 text-surface-600" },
+  ];
 
   if (isLoading || orgLoading) {
     return <div className="p-8 text-center text-surface-500">데이터를 불러오는 중입니다...</div>;
   }
 
-  const mobileNavItems = [
-    { to: "/monitoring", icon: "📅", label: "점검 조회/입력", color: "bg-info-100 text-info-700" },
-    { to: "/data-management", icon: "📋", label: "점검 데이터", color: "bg-primary-100 text-primary-700" },
-    { to: "/schedule", icon: "🗓️", label: "점검 스케줄", color: "bg-success-100 text-success-700" },
-    { to: "/committee", icon: "👥", label: "명단 관리", color: "bg-warning-100 text-warning-700" },
-    { to: "/events", icon: "🤝", label: "월별 행사", color: "bg-danger-100 text-danger-700" },
-    { to: "/management", icon: "🏢", label: "코드 관리", color: "bg-primary-50 text-primary-600" },
-    { to: "/yearly-report", icon: "📈", label: "연간 리포트", color: "bg-success-50 text-success-600" },
-    { to: "/admin", icon: "⚙️", label: "시스템 설정", color: "bg-surface-100 text-surface-700" },
-  ];
+  const todayLabel = today.replace(/-/g, ".");
 
   return (
-    <div className="animate-in fade-in duration-500 flex-1 flex flex-col items-stretch 2xl:min-h-0">
-      
+    <div className="animate-in fade-in duration-500 space-y-6">
+
       {/* Mobile Menu View */}
       <div className="lg:hidden flex flex-col gap-4">
-        <h2 className="text-xl font-bold text-surface-900 px-1 border-l-4 border-primary-500 pl-3">메뉴</h2>
-        <div className="grid grid-cols-2 gap-4">
-          {mobileNavItems.map((item, idx) => (
-            <Link key={idx} to={item.to} className="bg-white rounded-xl shadow-sm border border-surface-200 p-4 flex flex-col items-center justify-center gap-3 hover:bg-surface-50 active:scale-95 transition-all">
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${item.color}`} role="img" aria-label={item.label}>
-                {item.icon}
-              </div>
+        <h2 className="text-xl font-bold text-surface-900 border-l-4 border-primary-500 pl-3">메뉴</h2>
+        <div className="grid grid-cols-2 gap-3">
+          {mobileNavItems.map((item) => (
+            <Link
+              key={item.to}
+              to={item.to}
+              className="bg-white rounded-xl shadow-sm border border-surface-200 p-4 flex flex-col items-center justify-center gap-2 hover:bg-surface-50 active:scale-95 transition-all min-h-[72px]"
+            >
               <span className="text-sm font-bold text-surface-700 text-center">{item.label}</span>
             </Link>
           ))}
         </div>
+
+        {/* Mobile today summary */}
+        <div className="bg-primary-900 rounded-xl p-4 text-white">
+          <div className="text-xs text-primary-300 mb-1">{todayLabel} 오늘 점검 현황</div>
+          <div className="flex items-end gap-2 mb-2">
+            <span className="text-3xl font-bold">{inspectedCount}</span>
+            <span className="text-primary-300 mb-1">/ {totalDepts} 부서</span>
+          </div>
+          <div className="w-full bg-primary-800 rounded-full h-2">
+            <div
+              className="bg-accent-400 h-2 rounded-full transition-all"
+              style={{ width: `${progressPct}%` }}
+            />
+          </div>
+        </div>
       </div>
 
       {/* Desktop Dashboard View */}
-      <div className="hidden lg:grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1">
-        
-        {/* Monthly Events */}
-        <Card className="border-surface-200 shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle>이번 달 행사 일정</CardTitle>
-          </CardHeader>
-          <CardContent>
-             <div className="space-y-4 pt-2">
-              {events.length === 0 && (
-                <div className="text-sm text-surface-400 py-4 border-b border-surface-50 text-center">이번 달 등록된 행사가 없습니다.</div>
-              )}
-              {events.map((e, i) => (
-                <div key={i} className="flex flex-col border-b border-surface-50 pb-3 last:border-0 hover:bg-surface-50 p-2 rounded transition-colors">
-                  <div className="flex justify-between items-center text-sm gap-2">
-                    <span className="font-bold text-surface-800 text-base flex items-center gap-2">
-                      <span className="text-pink-500" role="img" aria-label="행사">🤝</span> {e.title}
-                    </span>
-                    <span className="flex-shrink-0 text-sm font-medium text-surface-600 bg-surface-100 px-3 py-1 rounded-full">{e.date}</span>
-                  </div>
-                  <div className="text-sm text-surface-500 mt-2 ml-7">
-                    <span className="font-medium mr-1">참석자:</span> {e.attendees && e.attendees.length > 0 ? e.attendees.join(", ") : "기록 없음"}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+      <div className="hidden lg:block space-y-6">
+        {/* Stats row */}
+        <div className="grid grid-cols-5 gap-4">
+          <Card className="col-span-2 bg-primary-900 text-white border-0 shadow-md">
+            <CardContent className="p-5">
+              <div className="text-xs text-primary-300 mb-1">{todayLabel} 오늘 점검 진행률</div>
+              <div className="flex items-end gap-2 mb-3">
+                <span className="text-4xl font-bold">{inspectedCount}</span>
+                <span className="text-primary-300 mb-1 text-sm">/ {totalDepts} 부서 완료</span>
+              </div>
+              <div className="w-full bg-primary-800 rounded-full h-2.5">
+                <div
+                  className="bg-accent-400 h-2.5 rounded-full transition-all"
+                  style={{ width: `${progressPct}%` }}
+                />
+              </div>
+              <div className="text-right text-primary-300 text-xs mt-1">{progressPct}%</div>
+            </CardContent>
+          </Card>
 
-        {/* Monthly Schedules */}
-        <Card className="border-surface-200 shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle>이번 달 점검 스케줄</CardTitle>
-          </CardHeader>
-          <CardContent>
-             <div className="space-y-4 pt-2">
-              {schedules.length === 0 && (
-                <div className="text-sm text-surface-400 py-4 border-b border-surface-50 text-center">이번 달 등록된 스케줄이 없습니다.</div>
-              )}
-              {schedules.map((s, i) => (
-                <div key={i} className="flex flex-col border-b border-surface-50 pb-3 last:border-0 hover:bg-surface-50 p-2 rounded transition-colors">
-                  <div className="flex justify-between items-center text-sm gap-2">
-                    <span className="font-bold text-surface-800 text-base flex items-center gap-2">
-                      <span className="text-green-500" role="img" aria-label="점검 일정">🗓️</span> {s.turn}차 점검
-                    </span>
-                    <span className="text-sm font-medium text-surface-600 bg-surface-100 px-3 py-1 rounded-full">{s.date}</span>
-                  </div>
-                  <div className="text-sm text-surface-500 mt-2 ml-7">
-                    <span className="font-medium mr-1">점검자:</span> {s.inspectors && s.inspectors.length > 0 ? s.inspectors.join(", ") : "미정"}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+          <Card className="border-success-200 shadow-sm">
+            <CardContent className="p-5 flex flex-col justify-between h-full">
+              <div className="text-xs text-surface-500 font-medium uppercase tracking-wide">정상</div>
+              <div className="text-3xl font-bold text-success-600 mt-2">{normalCount}</div>
+              <div className="text-xs text-surface-400">부서</div>
+            </CardContent>
+          </Card>
 
+          <Card className="border-warning-200 shadow-sm">
+            <CardContent className="p-5 flex flex-col justify-between h-full">
+              <div className="text-xs text-surface-500 font-medium uppercase tracking-wide">주의</div>
+              <div className="text-3xl font-bold text-warning-600 mt-2">{warningCount}</div>
+              <div className="text-xs text-surface-400">부서</div>
+            </CardContent>
+          </Card>
+
+          <Card className={`shadow-sm ${urgentCount > 0 ? "border-danger-300 bg-danger-50" : "border-surface-200"}`}>
+            <CardContent className="p-5 flex flex-col justify-between h-full">
+              <div className="text-xs text-surface-500 font-medium uppercase tracking-wide">긴급</div>
+              <div className={`text-3xl font-bold mt-2 ${urgentCount > 0 ? "text-danger-600" : "text-surface-400"}`}>
+                {urgentCount}
+              </div>
+              <div className="text-xs text-surface-400">부서</div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Average score + building breakdown */}
+        {inspectedCount > 0 && (
+          <div className="grid grid-cols-5 gap-4">
+            <Card className="col-span-2 border-surface-200 shadow-sm">
+              <CardContent className="p-5">
+                <div className="text-xs text-surface-500 uppercase tracking-wide mb-2">오늘 평균 점수</div>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-4xl font-bold text-primary-700">{avgScore ?? "-"}</span>
+                  <span className="text-surface-400 text-sm">/ 20점</span>
+                </div>
+                <div className="mt-3 w-full bg-surface-100 rounded-full h-2">
+                  <div
+                    className="bg-primary-500 h-2 rounded-full"
+                    style={{ width: avgScore ? `${(avgScore / 20) * 100}%` : "0%" }}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="col-span-3 border-surface-200 shadow-sm">
+              <CardContent className="p-5">
+                <div className="text-xs text-surface-500 uppercase tracking-wide mb-3">건물별 점검 현황</div>
+                <div className="space-y-2">
+                  {buildings.map((b) => {
+                    const bDepts = departments.filter((d) => d.buildingId === b.id);
+                    const bRecords = todayRecords.filter((r) =>
+                      bDepts.some((d) => d.id === r.department_id)
+                    );
+                    const bPct = bDepts.length > 0 ? Math.round((bRecords.length / bDepts.length) * 100) : 0;
+                    return (
+                      <div key={b.id} className="flex items-center gap-3">
+                        <span className="text-sm text-surface-700 w-16 shrink-0">{b.name}</span>
+                        <div className="flex-1 bg-surface-100 rounded-full h-1.5">
+                          <div
+                            className="bg-accent-400 h-1.5 rounded-full transition-all"
+                            style={{ width: `${bPct}%` }}
+                          />
+                        </div>
+                        <span className="text-xs text-surface-500 w-16 text-right shrink-0">
+                          {bRecords.length}/{bDepts.length} ({bPct}%)
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Events + Schedules */}
+        <div className="grid grid-cols-2 gap-6">
+          <Card className="border-surface-200 shadow-sm">
+            <CardHeader className="pb-2">
+              <CardTitle>이번 달 행사 일정</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3 pt-1">
+                {events.length === 0 && (
+                  <div className="text-sm text-surface-400 py-6 text-center">이번 달 등록된 행사가 없습니다.</div>
+                )}
+                {events.map((e) => (
+                  <div key={e.id} className="flex items-start gap-3 p-2 rounded-lg hover:bg-surface-50 transition-colors">
+                    <span className="text-xs font-mono text-surface-500 bg-surface-100 px-2 py-1 rounded shrink-0">
+                      {e.date.slice(5)}
+                    </span>
+                    <div>
+                      <div className="text-sm font-semibold text-surface-900">{e.title}</div>
+                      {e.attendees.length > 0 && (
+                        <div className="text-xs text-surface-500 mt-0.5">{e.attendees.join(", ")}</div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-surface-200 shadow-sm">
+            <CardHeader className="pb-2">
+              <CardTitle>이번 달 점검 스케줄</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3 pt-1">
+                {schedules.length === 0 && (
+                  <div className="text-sm text-surface-400 py-6 text-center">이번 달 등록된 스케줄이 없습니다.</div>
+                )}
+                {schedules.map((s) => (
+                  <div key={s.id} className="flex items-start gap-3 p-2 rounded-lg hover:bg-surface-50 transition-colors">
+                    <span className="text-xs font-mono text-surface-500 bg-surface-100 px-2 py-1 rounded shrink-0">
+                      {s.date.slice(5)}
+                    </span>
+                    <div>
+                      <div className="text-sm font-semibold text-surface-900">{s.turn}차 점검</div>
+                      {s.inspectors.length > 0 && (
+                        <div className="text-xs text-surface-500 mt-0.5">{s.inspectors.join(", ")}</div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 import { NavLink } from "react-router";
 import { cn } from "@/src/lib/utils";
+import { HospitalLogo } from "@/src/components/ui/HospitalLogo";
 
 const navItems = [
   { to: "/", icon: "◈", label: "대시보드" },
@@ -29,13 +30,11 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
       )}
     >
       {/* Logo */}
-      <div className="flex items-center gap-3 px-5 py-5 border-b border-primary-800">
-        <div className="w-9 h-9 bg-accent-400 rounded-lg flex items-center justify-center shrink-0" aria-hidden="true">
-          <span className="text-white font-bold text-base leading-none">좋</span>
-        </div>
-        <div>
-          <div className="text-white font-bold text-sm leading-tight" aria-label="좋은문화병원">좋은문화병원</div>
-          <div className="text-primary-300 text-[10px] leading-tight mt-0.5">Energy Management</div>
+      <div className="flex items-center px-4 py-4 border-b border-primary-800">
+        <HospitalLogo size={44} showText={false} variant="symbol" />
+        <div className="ml-3">
+          <div className="text-white font-bold text-sm leading-tight">좋은문화병원</div>
+          <div className="text-primary-300 text-[10px] leading-tight mt-0.5">은성의료재단</div>
         </div>
       </div>
 

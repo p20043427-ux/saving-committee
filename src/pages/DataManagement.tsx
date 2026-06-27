@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/src/lib/supabase";
-import { liveQuery, rowToRecord } from "@/src/lib/db";
+import { liveQuery, rowToRecord, computeStatus } from "@/src/lib/db";
 import { useAuth } from "@/src/components/auth/AuthProvider";
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
 import { Download, CalendarDays, BarChart2, ArrowUp, ArrowDown } from "lucide-react";
@@ -306,32 +306,20 @@ export function DataManagement() {
   const handleScoreChange = (type: keyof RecordDoc['scores'], value: string) => {
     const num = parseInt(value) || 0;
     const clamped = Math.min(Math.max(num, 0), 5);
-    
+
     setEditForm(prev => {
       const newScores = { ...prev.scores, [type]: clamped } as RecordDoc['scores'];
       const totalScore = (newScores.lights || 0) + (newScores.water || 0) + (newScores.recycle || 0) + (newScores.focus || 0);
-      let status = "정상";
-      if (totalScore < 12 || newScores.lights <= 2 || newScores.water <= 2) {
-        status = "긴급";
-      } else if (totalScore < 15 || (prev.notes && prev.notes.length > 1)) {
-        status = "주의";
-      }
+      const status = computeStatus(newScores, prev.notes || "");
       return { ...prev, scores: newScores, totalScore, status };
     });
   };
 
   const handleNotesChange = (value: string) => {
     setEditForm(prev => {
-      const notes = value;
-      const totalScore = prev.totalScore || 0;
-      let status = "정상";
-      const scores = prev.scores || { lights:0, water:0, recycle:0, focus:0 };
-      if (totalScore < 12 || scores.lights <= 2 || scores.water <= 2) {
-        status = "긴급";
-      } else if (totalScore < 15 || notes.length > 1) {
-        status = "주의";
-      }
-      return { ...prev, notes, status };
+      const scores = prev.scores || { lights: 0, water: 0, recycle: 0, focus: 0 };
+      const status = computeStatus(scores, value);
+      return { ...prev, notes: value, status };
     });
   };
 

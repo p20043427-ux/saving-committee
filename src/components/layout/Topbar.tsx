@@ -1,6 +1,7 @@
 import { Menu, LogOut } from "lucide-react";
 import { useLocation, useNavigate } from "react-router";
 import { useAuth } from "@/src/components/auth/AuthProvider";
+import { HospitalLogo } from "@/src/components/ui/HospitalLogo";
 
 interface TopbarProps {
   onToggleMenu?: () => void;
@@ -46,9 +47,12 @@ export function Topbar({ onToggleMenu }: TopbarProps) {
         </button>
 
         {/* Breadcrumb */}
-        <nav aria-label="현재 위치" className="flex items-center gap-1.5 text-sm">
-          <span className="text-surface-400 hidden sm:inline">절약위원회</span>
-          <span className="text-surface-300 hidden sm:inline">/</span>
+        <nav aria-label="현재 위치" className="flex items-center gap-2 text-sm">
+          <span className="hidden md:flex items-center gap-1.5 text-surface-400">
+            <HospitalLogo size={20} showText={false} variant="symbol" />
+            <span>좋은문화병원</span>
+          </span>
+          <span className="text-surface-300 hidden md:inline">/</span>
           <span className="text-primary-700 font-semibold">{pageLabel}</span>
         </nav>
       </div>
