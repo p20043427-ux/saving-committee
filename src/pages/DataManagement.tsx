@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/src/lib/supabase";
-import { liveQuery, rowToRecord, computeStatus } from "@/src/lib/db";
+import { liveQuery, rowToRecord, computeStatus, RecordRow } from "@/src/lib/db";
 import { useAuth } from "@/src/components/auth/AuthProvider";
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
 import { Download, CalendarDays, BarChart2, ArrowUp, ArrowDown } from "lucide-react";
@@ -61,6 +61,9 @@ export function DataManagement() {
   const [isExporting, setIsExporting] = useState(false);
   const { confirm, dialogProps } = useConfirm();
 
+  // Selection State (Raw)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
   // Sort State (Raw)
   type RawSortKey = 'date' | 'buildingName' | 'departmentName' | 'inspector' | 'lights' | 'water' | 'recycle' | 'focus' | 'totalScore' | 'status';
   const [rawSortConfig, setRawSortConfig] = useState<{key: RawSortKey, direction: 'asc' | 'desc'} | null>(null);
@@ -112,7 +115,7 @@ export function DataManagement() {
       }
     }
 
-    const unsubscribe = liveQuery<any>(
+    const unsubscribe = liveQuery<RecordRow>(
       "sc_records",
       () =>
         supabase
@@ -138,6 +141,11 @@ export function DataManagement() {
       unsubscribe();
     };
   }, [activeTab, filterType, filterMonth, startDate, endDate, filterYear]);
+
+  // 필터/페이지 변경 시 선택 초기화
+  useEffect(() => {
+    setSelectedIds(new Set());
+  }, [page, filterType, filterMonth, startDate, endDate]);
 
   // 필터 변경 시 page 리셋
   useEffect(() => {
@@ -214,8 +222,9 @@ export function DataManagement() {
       }
     });
     
+    type AggRow = { departmentId: string; departmentName: string; yearlyAvg: number | null } & Record<string, number | null | string>;
     let resultArr = Object.values(deptStats).map(dept => {
-      const result: any = { departmentId: dept.id, departmentName: dept.name };
+      const result: AggRow = { departmentId: dept.id, departmentName: dept.name, yearlyAvg: null };
       let yearlyTotal = 0;
       let yearlyCount = 0;
       for (let i = 1; i <= 12; i++) {
@@ -464,11 +473,60 @@ export function DataManagement() {
             </button>
           </div>
 
+          {selectedIds.size > 0 && (
+            <div className="flex items-center gap-3 px-4 py-2 bg-primary-50 border border-primary-200 rounded-xl text-sm">
+              <span className="font-semibold text-primary-700">{selectedIds.size}건 선택됨</span>
+              <button
+                onClick={async () => {
+                  const ok = await confirm("선택 항목 삭제", `선택한 ${selectedIds.size}건을 모두 삭제하시겠습니까? (되돌릴 수 없습니다.)`);
+                  if (!ok) return;
+                  try {
+                    const ids = Array.from(selectedIds);
+                    const { error } = await supabase.from("sc_records").delete().in("id", ids);
+                    if (error) throw error;
+                    setSelectedIds(new Set());
+                  } catch (err) {
+                    console.error("일괄 삭제 오류:", err);
+                    toast.error("일괄 삭제 중 오류가 발생했습니다.");
+                  }
+                }}
+                className="px-3 py-1 bg-danger-600 text-white rounded-lg text-xs font-semibold hover:bg-danger-700 transition-colors"
+              >
+                선택 삭제
+              </button>
+              <button
+                onClick={() => setSelectedIds(new Set())}
+                className="px-3 py-1 bg-surface-200 text-surface-700 rounded-lg text-xs font-semibold hover:bg-surface-300 transition-colors"
+              >
+                선택 해제
+              </button>
+            </div>
+          )}
+
           <div className="bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm whitespace-nowrap">
                 <thead className="bg-surface-50 text-surface-600 border-b border-surface-200">
                   <tr>
+                    <th className="py-3 px-4 w-10">
+                      <input
+                        type="checkbox"
+                        aria-label="전체 선택"
+                        checked={pagedRecords.length > 0 && pagedRecords.every(r => selectedIds.has(r.id))}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedIds(prev => new Set([...prev, ...pagedRecords.map(r => r.id)]));
+                          } else {
+                            setSelectedIds(prev => {
+                              const next = new Set(prev);
+                              pagedRecords.forEach(r => next.delete(r.id));
+                              return next;
+                            });
+                          }
+                        }}
+                        className="rounded border-surface-300"
+                      />
+                    </th>
                     <th className="py-3 px-4 font-semibold cursor-pointer hover:bg-surface-100 select-none whitespace-nowrap" onClick={() => handleRawSort('date')}>점검일{renderRawSortIcon('date')}</th>
                     <th className="py-3 px-4 font-semibold cursor-pointer hover:bg-surface-100 select-none whitespace-nowrap" onClick={() => handleRawSort('buildingName')}>소속 건물{renderRawSortIcon('buildingName')}</th>
                     <th className="py-3 px-4 font-semibold cursor-pointer hover:bg-surface-100 select-none whitespace-nowrap" onClick={() => handleRawSort('departmentName')}>부서명{renderRawSortIcon('departmentName')}</th>
@@ -486,7 +544,7 @@ export function DataManagement() {
                 <tbody className="divide-y divide-surface-100">
                   {filteredRecords.length === 0 ? (
                     <tr>
-                      <td colSpan={12} className="py-8 text-center text-surface-500">
+                      <td colSpan={13} className="py-8 text-center text-surface-500">
                         선택된 기간에 입력된 점검 데이터가 없습니다.
                       </td>
                     </tr>
@@ -494,7 +552,23 @@ export function DataManagement() {
                     pagedRecords.map(record => {
                       const isEditing = editingId === record.id;
                       return (
-                        <tr key={record.id} className="hover:bg-surface-50 group">
+                        <tr key={record.id} className={`hover:bg-surface-50 group ${selectedIds.has(record.id) ? "bg-primary-50" : ""}`}>
+                          <td className="py-2 px-4 w-10">
+                            <input
+                              type="checkbox"
+                              aria-label={`${record.departmentName} 선택`}
+                              checked={selectedIds.has(record.id)}
+                              onChange={(e) => {
+                                setSelectedIds(prev => {
+                                  const next = new Set(prev);
+                                  if (e.target.checked) next.add(record.id);
+                                  else next.delete(record.id);
+                                  return next;
+                                });
+                              }}
+                              className="rounded border-surface-300"
+                            />
+                          </td>
                           <td className="py-2 px-4 text-surface-600">{record.date.split("T")[0]}</td>
                           <td className="py-2 px-4 text-surface-900">{getBuildingName(record.buildingId)}</td>
                           <td className="py-2 px-4 text-surface-900 font-medium">{record.departmentName}</td>
@@ -674,11 +748,12 @@ export function DataManagement() {
                         </td>
                         {[1,2,3,4,5,6,7,8,9,10,11,12].map(m => {
                           const val = row[`m${m}`];
+                          const numVal = val !== null ? Number(val) : null;
                           return (
                             <td key={m} className="py-2 px-4 text-center border-l border-surface-50 font-mono">
-                              {val !== null ? (
-                                <span className={val >= 18 ? "text-green-600 font-medium" : val < 15 ? "text-red-500 font-medium" : "text-surface-700"}>
-                                  {val}
+                              {numVal !== null ? (
+                                <span className={numVal >= 18 ? "text-green-600 font-medium" : numVal < 15 ? "text-red-500 font-medium" : "text-surface-700"}>
+                                  {numVal}
                                 </span>
                               ) : (
                                 <span className="text-surface-300">-</span>

@@ -1,10 +1,9 @@
-import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/Card";
-import { supabase } from "@/src/lib/supabase";
-import { liveQuery } from "@/src/lib/db";
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
 import { SkeletonCard } from "@/src/components/ui/Skeleton";
+import { ClipboardList, Database, Calendar, Users, PartyPopper, Building2, BarChart3, Settings } from "lucide-react";
+import { useDashboardData } from "@/src/hooks/useDashboardData";
 import {
   BarChart,
   Bar,
@@ -15,110 +14,9 @@ import {
   Cell,
 } from "recharts";
 
-interface ScheduleRow {
-  id: string;
-  date: string;
-  turn: number;
-  inspectors: string[];
-  month: string;
-}
-
-interface EventRow {
-  id: string;
-  date: string;
-  title: string;
-  attendees: string[];
-  month: string;
-}
-
-interface RecordSummary {
-  department_id: string;
-  status: string;
-  total_score: number;
-}
-
-interface MonthlyRecord {
-  department_id: string;
-  status: string;
-  total_score: number;
-  date: string;
-}
-
 export function Dashboard() {
   const { departments, buildings, isLoading: orgLoading } = useOrganization();
-  const [schedules, setSchedules] = useState<ScheduleRow[]>([]);
-  const [events, setEvents] = useState<EventRow[]>([]);
-  const [todayRecords, setTodayRecords] = useState<RecordSummary[]>([]);
-  const [monthlyRecords, setMonthlyRecords] = useState<MonthlyRecord[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const today = new Date().toISOString().split("T")[0];
-  const currentMonth = today.slice(0, 7);
-
-  useEffect(() => {
-    const unsubs: Array<() => void> = [];
-
-    const unsubSchedules = liveQuery<ScheduleRow>(
-      "sc_schedules",
-      () =>
-        supabase
-          .from("sc_schedules")
-          .select("*")
-          .eq("month", currentMonth)
-          .order("date", { ascending: true }),
-      (rows) => {
-        setSchedules(rows.map((s) => ({ ...s, inspectors: s.inspectors || [] })));
-      }
-    );
-    unsubs.push(unsubSchedules);
-
-    const unsubEvents = liveQuery<EventRow>(
-      "sc_events",
-      () =>
-        supabase
-          .from("sc_events")
-          .select("*")
-          .eq("month", currentMonth)
-          .order("date", { ascending: true }),
-      (rows) => {
-        setEvents(rows.map((e) => ({ ...e, attendees: e.attendees || [] })));
-      }
-    );
-    unsubs.push(unsubEvents);
-
-    const startOfDay = today + "T00:00:00";
-    const endOfDay = today + "T23:59:59.999Z";
-
-    const unsubRecords = liveQuery<RecordSummary>(
-      "sc_records",
-      () =>
-        supabase
-          .from("sc_records")
-          .select("department_id, status, total_score")
-          .gte("date", startOfDay)
-          .lte("date", endOfDay),
-      (rows) => {
-        setTodayRecords(rows);
-        setIsLoading(false);
-      },
-      () => setIsLoading(false)
-    );
-    unsubs.push(unsubRecords);
-
-    const unsubMonthly = liveQuery<MonthlyRecord>(
-      "sc_records_monthly",
-      () =>
-        supabase
-          .from("sc_records")
-          .select("department_id, status, total_score, date")
-          .gte("date", currentMonth + "-01T00:00:00")
-          .lte("date", currentMonth + "-31T23:59:59"),
-      (rows) => setMonthlyRecords(rows)
-    );
-    unsubs.push(unsubMonthly);
-
-    return () => unsubs.forEach((u) => u());
-  }, [today, currentMonth]);
+  const { schedules, events, todayRecords, monthlyRecords, isLoading, today, currentMonth } = useDashboardData();
 
   const totalDepts = departments.length;
   const inspectedCount = todayRecords.length;
@@ -151,15 +49,18 @@ export function Dashboard() {
       ? (monthlyRecords.reduce((s, r) => s + r.total_score, 0) / monthlyTotal).toFixed(1)
       : "-";
 
+  // currentMonth 참조를 유지 (lint용)
+  void currentMonth;
+
   const mobileNavItems = [
-    { to: "/monitoring", label: "점검 조회/입력", color: "bg-primary-100 text-primary-700" },
-    { to: "/data-management", label: "점검 데이터", color: "bg-info-100 text-info-700" },
-    { to: "/schedule", label: "점검 스케줄", color: "bg-success-100 text-success-700" },
-    { to: "/committee", label: "명단 관리", color: "bg-warning-100 text-warning-700" },
-    { to: "/events", label: "월별 행사", color: "bg-danger-100 text-danger-700" },
-    { to: "/management", label: "코드 관리", color: "bg-surface-100 text-surface-700" },
-    { to: "/yearly-report", label: "연간 리포트", color: "bg-success-50 text-success-600" },
-    { to: "/admin", label: "시스템 설정", color: "bg-surface-50 text-surface-600" },
+    { to: "/monitoring",      icon: ClipboardList,  label: "점검 조회/입력",   color: "bg-primary-50 text-primary-700 border-primary-100" },
+    { to: "/data-management", icon: Database,       label: "점검 데이터",      color: "bg-info-50 text-info-700 border-info-100" },
+    { to: "/schedule",        icon: Calendar,       label: "점검 스케줄",      color: "bg-success-50 text-success-700 border-success-100" },
+    { to: "/committee",       icon: Users,          label: "명단 관리",        color: "bg-warning-50 text-warning-700 border-warning-100" },
+    { to: "/events",          icon: PartyPopper,    label: "월별 행사",        color: "bg-danger-50 text-danger-700 border-danger-100" },
+    { to: "/management",      icon: Building2,      label: "코드 관리",        color: "bg-surface-100 text-surface-700 border-surface-200" },
+    { to: "/yearly-report",   icon: BarChart3,      label: "연간 리포트",      color: "bg-success-50 text-success-600 border-success-100" },
+    { to: "/admin",           icon: Settings,       label: "시스템 설정",      color: "bg-surface-50 text-surface-600 border-surface-100" },
   ];
 
   if (isLoading || orgLoading) {
@@ -186,9 +87,10 @@ export function Dashboard() {
             <Link
               key={item.to}
               to={item.to}
-              className="bg-white rounded-xl shadow-sm border border-surface-200 p-4 flex flex-col items-center justify-center gap-2 hover:bg-surface-50 active:scale-95 transition-all min-h-[72px]"
+              className={`rounded-xl border p-4 flex flex-col items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all min-h-[80px] ${item.color}`}
             >
-              <span className="text-sm font-bold text-surface-700 text-center">{item.label}</span>
+              <item.icon size={22} aria-hidden="true" />
+              <span className="text-xs font-bold text-center leading-tight">{item.label}</span>
             </Link>
           ))}
         </div>

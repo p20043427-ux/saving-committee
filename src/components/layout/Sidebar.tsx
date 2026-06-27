@@ -6,16 +6,19 @@ import {
   Users, PartyPopper, Building2, BarChart3, Settings
 } from "lucide-react";
 
-const navItems = [
-  { to: "/",                icon: LayoutDashboard, label: "대시보드" },
-  { to: "/monitoring",      icon: ClipboardList,   label: "점검 조회/입력" },
-  { to: "/data-management", icon: Database,        label: "점검 데이터 관리" },
-  { to: "/schedule",        icon: Calendar,        label: "점검 스케줄" },
-  { to: "/committee",       icon: Users,           label: "위원회 명단 관리" },
-  { to: "/events",          icon: PartyPopper,     label: "월별 행사 관리" },
-  { to: "/management",      icon: Building2,       label: "건물/부서 코드 관리" },
-  { to: "/yearly-report",   icon: BarChart3,       label: "연간 분석 리포트" },
-  { to: "/admin",           icon: Settings,        label: "시스템 설정" },
+const mainNavItems = [
+  { to: "/",                 icon: LayoutDashboard, label: "대시보드" },
+  { to: "/monitoring",       icon: ClipboardList,   label: "점검 조회/입력" },
+  { to: "/data-management",  icon: Database,        label: "점검 데이터 관리" },
+  { to: "/schedule",         icon: Calendar,        label: "점검 스케줄" },
+  { to: "/committee",        icon: Users,           label: "위원회 명단 관리" },
+  { to: "/events",           icon: PartyPopper,     label: "월별 행사 관리" },
+  { to: "/yearly-report",    icon: BarChart3,       label: "연간 분석 리포트" },
+];
+
+const adminNavItems = [
+  { to: "/management", icon: Building2, label: "건물/부서 코드 관리" },
+  { to: "/admin",      icon: Settings,  label: "시스템 설정" },
 ];
 
 interface SidebarProps {
@@ -44,13 +47,39 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
 
       {/* Nav */}
       <nav aria-label="주요 메뉴" className="flex-1 px-3 py-4 overflow-y-auto">
-        <div className="text-[10px] font-semibold text-primary-400 uppercase tracking-widest px-2 mb-2">메뉴</div>
-        <ul role="list" className="space-y-0.5">
-          {navItems.map((item) => (
+        <div className="text-[10px] font-semibold text-primary-400 uppercase tracking-widest px-2 mb-2">업무</div>
+        <ul role="list" className="space-y-0.5 mb-4">
+          {mainNavItems.map((item) => (
             <li key={item.to}>
               <NavLink
                 to={item.to}
                 end={item.to === "/"}
+                onClick={onClose}
+                className={({ isActive }) =>
+                  cn(
+                    "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors cursor-pointer",
+                    isActive
+                      ? "bg-accent-400 text-white font-semibold"
+                      : "text-primary-200 hover:bg-primary-800 hover:text-white"
+                  )
+                }
+              >
+                <span className="shrink-0" aria-hidden="true">
+                  <item.icon size={16} />
+                </span>
+                <span>{item.label}</span>
+              </NavLink>
+            </li>
+          ))}
+        </ul>
+
+        <div className="text-[10px] font-semibold text-primary-400 uppercase tracking-widest px-2 mb-2 mt-2 border-t border-primary-800 pt-4">관리</div>
+        <ul role="list" className="space-y-0.5">
+          {adminNavItems.map((item) => (
+            <li key={item.to}>
+              <NavLink
+                to={item.to}
+                end={false}
                 onClick={onClose}
                 className={({ isActive }) =>
                   cn(
