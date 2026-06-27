@@ -339,37 +339,6 @@ export function YearlyReport() {
              )}
           </CardContent>
         </Card>
-
-        <Card className="bg-primary-900 border-none text-white shadow-xl">
-          <CardHeader>
-            <CardTitle className="text-white text-lg flex items-center space-x-2">
-              <span>🤖</span> <span>AI 종합 분석</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="bg-primary-800/50 p-4 rounded-xl border border-primary-700">
-                <p className="text-sm leading-relaxed text-primary-100">
-                  <strong className="text-white">성과 요약: </strong>
-                  지정된 기간 동안 {selectedDeptInfo?.name} 부서는 
-                  {periodData.length > 0 && periodData[periodData.length - 1].deptAverage && periodData[periodData.length - 1].allAverage ? (
-                    periodData[periodData.length - 1].deptAverage! >= periodData[periodData.length - 1].allAverage! ? 
-                    <span className="text-green-300 font-bold ml-1">전체 병원 평균보다 우수한 성적을 기록</span> : 
-                    <span className="text-rose-300 font-bold ml-1">전체 병원 평균 대비 다소 부족한 성과</span>
-                  ) : <span>비교 가능한 데이터가 부족합니다.</span>} 하고 있습니다.
-                </p>
-              </div>
-              <div className="flex items-start space-x-3 text-sm">
-                <span className="text-orange-400 mt-0.5">💡</span>
-                <p className="text-primary-200">
-                  {extremumStats.highestDept?.id === selectedDept ? '현재 부서는 최상위 수준의 점검 성과를 유지하고 있습니다. 지속적인 관리가 필요합니다.' : 
-                   extremumStats.lowestDept?.id === selectedDept ? '현재 부서의 점검 성과가 가장 저조합니다. 취약 항목 파악 및 개선책 마련이 시급합니다.' : 
-                   `분석 기간 내 점수가 가장 저조한 ${extremumStats.lowestDept?.name || '-'} 부서에 우선적인 관리/감독을 집중 배정하시기 바랍니다.`}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
