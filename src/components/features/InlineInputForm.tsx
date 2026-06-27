@@ -6,6 +6,7 @@ import { useAuth } from "@/src/components/auth/AuthProvider";
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
 import { Button } from "@/src/components/ui/Button";
 import { Select, Textarea } from "@/src/components/ui/Input";
+import { toast } from "@/src/components/ui/Toast";
 
 interface InlineInputFormProps {
   buildingId: string;
@@ -88,6 +89,7 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
       });
       if (error) throw error;
 
+      toast.success("점검 데이터가 저장되었습니다.");
       setSuccessMsg(`${inspector}님 점검 결과 저장 완료`);
       setTimeout(() => { onSuccess(); }, 1500);
     } catch (error) {

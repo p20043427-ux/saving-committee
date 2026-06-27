@@ -103,6 +103,26 @@ body {
   @apply bg-surface-400;
 }
 
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: #0f172a;
+    color: #e2e8f0;
+  }
+  :root {
+    color-scheme: dark;
+  }
+  .bg-white { background-color: #1e293b !important; }
+  .bg-surface-50 { background-color: #0f172a !important; }
+  .bg-surface-100 { background-color: #1e293b !important; }
+  .bg-surface-200 { background-color: #334155 !important; }
+  .text-surface-900 { color: #f1f5f9 !important; }
+  .text-surface-700 { color: #cbd5e1 !important; }
+  .text-surface-600 { color: #94a3b8 !important; }
+  .text-surface-500 { color: #64748b !important; }
+  .border-surface-200 { border-color: #334155 !important; }
+  .border-surface-300 { border-color: #475569 !important; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-pulse,
   .animate-ping,

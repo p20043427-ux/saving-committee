@@ -51,6 +51,10 @@ export function DataManagement() {
   // Filter State (Aggregate)
   const [filterYear, setFilterYear] = useState(new Date().getFullYear().toString());
 
+  // Pagination State (Raw)
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 30;
+
   // Edit State
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<RecordDoc>>({});
@@ -135,10 +139,15 @@ export function DataManagement() {
     };
   }, [activeTab, filterType, filterMonth, startDate, endDate, filterYear]);
 
+  // 필터 변경 시 page 리셋
+  useEffect(() => {
+    setPage(1);
+  }, [filterType, filterMonth, startDate, endDate, rawSortConfig]);
+
   const getBuildingName = (id: string) => buildings.find(b => b.id === id)?.name || id;
 
   // Computed: Display Records (Raw)
-  const displayRecords = useMemo(() => {
+  const filteredRecords = useMemo(() => {
     let filtered = allRecords.filter(r => {
       const d = r.date.split("T")[0];
       if (filterType === "month") {
@@ -176,6 +185,9 @@ export function DataManagement() {
 
     return filtered;
   }, [allRecords, filterType, filterMonth, startDate, endDate, rawSortConfig, buildings]);
+
+  const pagedRecords = filteredRecords.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalPages = Math.ceil(filteredRecords.length / PAGE_SIZE);
 
   // Computed: Aggregate Data
   const aggregateData = useMemo(() => {
@@ -245,7 +257,7 @@ export function DataManagement() {
   // Export handlers
   const exportRawCSV = () => {
     const headers = ["점검일", "소속 건물", "부서명", "점검자", "조명/전열", "수돗물", "재활용", "중점점검", "총점", "상태", "특이사항"];
-    const rows = displayRecords.map(r => [
+    const rows = filteredRecords.map(r => [
       r.date.split("T")[0],
       getBuildingName(r.buildingId) || "",
       r.departmentName || "",
@@ -472,14 +484,14 @@ export function DataManagement() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-surface-100">
-                  {displayRecords.length === 0 ? (
+                  {filteredRecords.length === 0 ? (
                     <tr>
                       <td colSpan={12} className="py-8 text-center text-surface-500">
                         선택된 기간에 입력된 점검 데이터가 없습니다.
                       </td>
                     </tr>
                   ) : (
-                    displayRecords.map(record => {
+                    pagedRecords.map(record => {
                       const isEditing = editingId === record.id;
                       return (
                         <tr key={record.id} className="hover:bg-surface-50 group">
@@ -576,6 +588,32 @@ export function DataManagement() {
                 </tbody>
               </table>
             </div>
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between px-4 py-3 border-t border-surface-200">
+                <span className="text-xs text-surface-500">
+                  전체 {filteredRecords.length}건 중 {(page-1)*PAGE_SIZE+1}–{Math.min(page*PAGE_SIZE, filteredRecords.length)}건
+                </span>
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => setPage(p => Math.max(1, p-1))}
+                    disabled={page === 1}
+                    className="px-3 py-1 text-sm border border-surface-300 rounded-md disabled:opacity-40 hover:bg-surface-50"
+                  >이전</button>
+                  {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => i + 1).map(n => (
+                    <button
+                      key={n}
+                      onClick={() => setPage(n)}
+                      className={`px-3 py-1 text-sm rounded-md border ${n === page ? 'bg-primary-700 text-white border-primary-700' : 'border-surface-300 hover:bg-surface-50'}`}
+                    >{n}</button>
+                  ))}
+                  <button
+                    onClick={() => setPage(p => Math.min(totalPages, p+1))}
+                    disabled={page === totalPages}
+                    className="px-3 py-1 text-sm border border-surface-300 rounded-md disabled:opacity-40 hover:bg-surface-50"
+                  >다음</button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       ) : (

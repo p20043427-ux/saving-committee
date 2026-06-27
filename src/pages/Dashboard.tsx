@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/Ca
 import { supabase } from "@/src/lib/supabase";
 import { liveQuery } from "@/src/lib/db";
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
+import { SkeletonCard } from "@/src/components/ui/Skeleton";
 
 interface ScheduleRow {
   id: string;
@@ -113,7 +114,14 @@ export function Dashboard() {
   ];
 
   if (isLoading || orgLoading) {
-    return <div className="p-8 text-center text-surface-500">데이터를 불러오는 중입니다...</div>;
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          {Array.from({ length: 5 }).map((_, i) => <SkeletonCard key={i} />)}
+        </div>
+        <SkeletonCard />
+      </div>
+    );
   }
 
   const todayLabel = today.replace(/-/g, ".");

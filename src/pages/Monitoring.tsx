@@ -232,6 +232,37 @@ export function Monitoring() {
         <div className="flex justify-center p-12 text-surface-400">데이터를 불러오는 중입니다...</div>
       ) : (
         <div className="space-y-4">
+          {/* 점검 진행률 */}
+          {(() => {
+            const totalDepts = departments.length;
+            const inspectedCount = records.length;
+            const progressPct = totalDepts > 0 ? Math.round((inspectedCount / totalDepts) * 100) : 0;
+            const urgentCount = records.filter(r => r.status === "긴급").length;
+            const warningCount = records.filter(r => r.status === "주의").length;
+            return (
+              <div className="mb-4 p-4 bg-white rounded-xl border border-surface-200">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-semibold text-surface-700">
+                    점검 진행률 — {inspectedCount}/{totalDepts}개 부서
+                  </span>
+                  <span className="text-sm font-bold text-primary-700">{progressPct}%</span>
+                </div>
+                <div className="h-2 bg-surface-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-accent-400 rounded-full transition-all duration-500"
+                    style={{ width: `${progressPct}%` }}
+                  />
+                </div>
+                {(urgentCount > 0 || warningCount > 0) && (
+                  <div className="flex gap-3 mt-2 text-xs">
+                    {urgentCount > 0 && <span className="text-danger-600 font-semibold">긴급 {urgentCount}건</span>}
+                    {warningCount > 0 && <span className="text-warning-600 font-semibold">주의 {warningCount}건</span>}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
           <div className="flex lg:hidden space-x-2 overflow-x-auto pb-2 -mx-2 px-2 scrollbar-hide">
             {buildings.map(b => (
               <button
@@ -269,13 +300,23 @@ export function Monitoring() {
 
                       return (
                         <div key={dept.id} className="flex flex-col">
-                          <div 
+                          <div
                             onClick={() => {
                               // 미점검 상태일 때만 클릭해서 폼을 열 수 있도록 설정
                               // || status === "정상" 등으로 클릭 가능 조건을 바꿀 수 있음
                               setExpandedDeptId(isExpanded ? null : dept.id);
                             }}
-                            className={`p-3 rounded-lg border transition-all ${getStatusColor(status)} flex items-center justify-between bg-white bg-opacity-70 backdrop-blur-sm ${status === "미점검" ? "cursor-pointer hover:shadow-sm hover:border-primary-300" : ""}`}
+                            className={`p-3 rounded-lg border transition-all flex items-center justify-between backdrop-blur-sm ${
+                              status === "미점검"
+                                ? "border-surface-200 bg-white cursor-pointer hover:shadow-sm hover:border-primary-300"
+                                : status === "정상"
+                                ? "border-success-200 bg-success-50/30"
+                                : status === "주의"
+                                ? "border-warning-200 bg-warning-50/30"
+                                : status === "긴급"
+                                ? "border-danger-300 border-2 bg-danger-50/50 animate-pulse"
+                                : "border-surface-200 bg-white"
+                            }`}
                           >
                             <div className="flex flex-col">
                               <span className="font-semibold text-sm break-keep">{dept.name}</span>
