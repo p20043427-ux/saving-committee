@@ -11,9 +11,11 @@ export function AppLayout() {
       <Sidebar isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         <Topbar onToggleMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)} />
-        <main className="flex-1 overflow-auto p-4 md:p-8">
-          <div className="mx-auto w-full max-w-7xl">
-            <Outlet />
+        <main className="flex-1 overflow-auto">
+          <div className="p-4 md:p-8">
+            <div className="mx-auto w-full max-w-7xl">
+              <Outlet />
+            </div>
           </div>
         </main>
       </div>

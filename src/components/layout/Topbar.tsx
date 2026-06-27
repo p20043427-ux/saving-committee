@@ -35,7 +35,7 @@ export function Topbar({ onToggleMenu }: TopbarProps) {
     : user?.email?.slice(0, 1).toUpperCase() ?? "관";
 
   return (
-    <header className="flex justify-between items-center shrink-0 bg-white border-b border-surface-200 px-6 py-0 h-14 -mx-4 md:-mx-8 -mt-4 md:-mt-8 mb-6">
+    <header className="flex justify-between items-center shrink-0 bg-white border-b border-surface-200 px-6 h-14">
       <div className="flex items-center gap-3">
         <button
           onClick={onToggleMenu}
