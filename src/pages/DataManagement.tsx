@@ -408,21 +408,23 @@ export function DataManagement() {
       <div className="flex space-x-1 border-b border-surface-200">
         <button
           onClick={() => setActiveTab("raw")}
-          className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+          className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors min-h-[44px] ${
             activeTab === "raw" ? "border-primary-500 text-primary-600" : "border-transparent text-surface-500 hover:text-surface-700 hover:border-surface-300"
           }`}
         >
           <CalendarDays className="w-4 h-4" />
-          상세 점검 내역
+          <span className="hidden sm:inline">상세 점검 내역</span>
+          <span className="sm:hidden">상세</span>
         </button>
         <button
           onClick={() => setActiveTab("aggregate")}
-          className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+          className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors min-h-[44px] ${
             activeTab === "aggregate" ? "border-primary-500 text-primary-600" : "border-transparent text-surface-500 hover:text-surface-700 hover:border-surface-300"
           }`}
         >
           <BarChart2 className="w-4 h-4" />
-          부서별 월간/연간 점수표
+          <span className="hidden sm:inline">부서별 월간/연간 점수표</span>
+          <span className="sm:hidden">집계</span>
         </button>
       </div>
 
@@ -433,7 +435,7 @@ export function DataManagement() {
               <select
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value as "month" | "range")}
-                className="bg-white border border-surface-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-700 font-medium"
+                className="bg-white border border-surface-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-700 font-medium min-h-[44px]"
               >
                 <option value="month">월간 조회</option>
                 <option value="range">기간 조회</option>
@@ -444,7 +446,7 @@ export function DataManagement() {
                   type="month"
                   value={filterMonth}
                   onChange={(e) => setFilterMonth(e.target.value)}
-                  className="bg-white border border-surface-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-900 font-medium"
+                  className="bg-white border border-surface-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-900 font-medium min-h-[44px]"
                 />
               ) : (
                 <div className="flex items-center gap-2">
@@ -452,21 +454,21 @@ export function DataManagement() {
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="bg-white border border-surface-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-900"
+                    className="bg-white border border-surface-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-900 min-h-[44px]"
                   />
                   <span className="text-surface-500">~</span>
                   <input
                     type="date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="bg-white border border-surface-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-900"
+                    className="bg-white border border-surface-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-900 min-h-[44px]"
                   />
                 </div>
               )}
             </div>
             <button
               onClick={exportRawCSV}
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-surface-300 hover:bg-surface-50 text-surface-700 text-sm font-medium rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2.5 bg-white border border-surface-300 hover:bg-surface-50 text-surface-700 text-sm font-medium rounded-lg transition-colors min-h-[44px]"
             >
               <Download className="w-4 h-4" />
               CSV 내보내기
@@ -671,19 +673,19 @@ export function DataManagement() {
                   <button
                     onClick={() => setPage(p => Math.max(1, p-1))}
                     disabled={page === 1}
-                    className="px-3 py-1 text-sm border border-surface-300 rounded-md disabled:opacity-40 hover:bg-surface-50"
+                    className="px-3 py-2 text-sm border border-surface-300 rounded-md disabled:opacity-40 hover:bg-surface-50 min-h-[44px]"
                   >이전</button>
                   {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => i + 1).map(n => (
                     <button
                       key={n}
                       onClick={() => setPage(n)}
-                      className={`px-3 py-1 text-sm rounded-md border ${n === page ? 'bg-primary-700 text-white border-primary-700' : 'border-surface-300 hover:bg-surface-50'}`}
+                      className={`px-3 py-2 text-sm rounded-md border min-h-[44px] ${n === page ? 'bg-primary-700 text-white border-primary-700' : 'border-surface-300 hover:bg-surface-50'}`}
                     >{n}</button>
                   ))}
                   <button
                     onClick={() => setPage(p => Math.min(totalPages, p+1))}
                     disabled={page === totalPages}
-                    className="px-3 py-1 text-sm border border-surface-300 rounded-md disabled:opacity-40 hover:bg-surface-50"
+                    className="px-3 py-2 text-sm border border-surface-300 rounded-md disabled:opacity-40 hover:bg-surface-50 min-h-[44px]"
                   >다음</button>
                 </div>
               </div>
@@ -698,7 +700,7 @@ export function DataManagement() {
               <select
                 value={filterYear}
                 onChange={(e) => setFilterYear(e.target.value)}
-                className="bg-white border border-surface-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 font-bold"
+                className="bg-white border border-surface-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 font-bold min-h-[44px]"
               >
                 {Array.from({ length: 5 }).map((_, i) => {
                   const y = (new Date().getFullYear() - 2 + i).toString();
@@ -708,7 +710,7 @@ export function DataManagement() {
             </div>
             <button
               onClick={exportAggregateCSV}
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-surface-300 hover:bg-surface-50 text-surface-700 text-sm font-medium rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2.5 bg-white border border-surface-300 hover:bg-surface-50 text-surface-700 text-sm font-medium rounded-lg transition-colors min-h-[44px]"
             >
               <Download className="w-4 h-4" />
               CSV 내보내기

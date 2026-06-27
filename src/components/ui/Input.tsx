@@ -1,7 +1,7 @@
 import React from "react";
 
 const baseClass =
-  "w-full rounded-md border border-surface-300 px-3 py-2 text-sm text-surface-900 bg-white outline-none transition-colors focus:border-primary-500 focus:ring-1 focus:ring-primary-500 disabled:bg-surface-50 disabled:text-surface-400 disabled:cursor-not-allowed placeholder:text-surface-400";
+  "w-full rounded-md border border-surface-300 px-3 py-2.5 text-sm text-surface-900 bg-white outline-none transition-colors focus:border-primary-500 focus:ring-1 focus:ring-primary-500 disabled:bg-surface-50 disabled:text-surface-400 disabled:cursor-not-allowed placeholder:text-surface-400 min-h-[44px]";
 
 type InputProps = React.InputHTMLAttributes<HTMLInputElement> & {
   className?: string;

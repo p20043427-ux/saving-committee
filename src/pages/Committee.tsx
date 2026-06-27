@@ -17,14 +17,17 @@ export interface CommitteeMember {
 export function Committee() {
   const [members, setMembers] = useState<CommitteeMember[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({ name: "", department: "", role: "", isActive: true });
 
   useEffect(() => {
-    const unsubscribe = liveQuery<any>(
+    const unsubscribe = liveQuery<{
+      id: string; name: string; department: string; role: string;
+      is_active: boolean; created_at: string;
+    }>(
       "sc_committee",
       () => supabase.from("sc_committee").select("*").order("created_at", { ascending: false }),
       (rows) => {
@@ -45,7 +48,6 @@ export function Committee() {
         setIsLoading(false);
       }
     );
-
     return () => unsubscribe();
   }, []);
 
@@ -73,7 +75,6 @@ export function Committee() {
       toast.error("이름을 입력해주세요.");
       return;
     }
-
     try {
       const row = {
         name: formData.name,
@@ -93,9 +94,9 @@ export function Committee() {
         if (error) throw error;
       }
       resetForm();
-    } catch (error: any) {
-      console.error("Error saving member:", error);
-      toast.error("직원 정보를 저장하는 중 오류가 발생했습니다: " + error.message);
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : "알 수 없는 오류";
+      toast.error("저장 중 오류가 발생했습니다: " + msg);
     }
   };
 
@@ -104,9 +105,9 @@ export function Committee() {
       const { error } = await supabase.from("sc_committee").delete().eq("id", id);
       if (error) throw error;
       setDeletingId(null);
-    } catch (error: any) {
-      console.error("Error deleting member:", error);
-      toast.error("삭제 중 오류가 발생했습니다: " + error.message);
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : "알 수 없는 오류";
+      toast.error("삭제 중 오류가 발생했습니다: " + msg);
     }
   };
 
@@ -116,21 +117,21 @@ export function Committee() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300 max-w-4xl mx-auto">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-surface-900 border-l-4 border-primary-500 pl-3">위원회 명단 관리</h1>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-surface-900 border-l-4 border-primary-500 pl-3">위원회 명단 관리</h1>
           <p className="text-surface-500 text-sm mt-1">환경/에너지 관리 위원회 명단을 관리합니다.</p>
         </div>
-        <Button variant="primary" size="md" onClick={() => setIsFormOpen(true)}>
+        <Button variant="primary" size="md" onClick={() => setIsFormOpen(true)} className="shrink-0">
           + 위원 추가
         </Button>
       </div>
 
       {isFormOpen && (
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-surface-200">
+        <div className="bg-white p-5 rounded-xl shadow-sm border border-surface-200">
           <h2 className="text-lg font-bold mb-4">{editingId ? "위원 정보 수정" : "새 위원 추가"}</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-surface-700 mb-1">이름</label>
                 <Input
@@ -159,22 +160,20 @@ export function Committee() {
                   placeholder="예: 점검위원"
                 />
               </div>
-              <div className="flex items-center mt-6">
-                <label className="flex items-center gap-2 cursor-pointer">
+              <div className="flex items-center sm:mt-6">
+                <label className="flex items-center gap-3 cursor-pointer min-h-[44px]">
                   <input
                     type="checkbox"
                     checked={formData.isActive}
                     onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                    className="rounded border-surface-300 text-primary-600 focus:ring-primary-500"
+                    className="w-4 h-4 rounded border-surface-300 text-primary-600 focus:ring-primary-500"
                   />
                   <span className="text-sm font-medium text-surface-700">활동 중 (현재 위원)</span>
                 </label>
               </div>
             </div>
             <div className="flex justify-end gap-2 pt-2">
-              <Button type="button" variant="secondary" size="md" onClick={resetForm}>
-                취소
-              </Button>
+              <Button type="button" variant="secondary" size="md" onClick={resetForm}>취소</Button>
               <Button type="submit" variant="primary" size="md">
                 {editingId ? "수정완료" : "추가완료"}
               </Button>
@@ -183,54 +182,96 @@ export function Committee() {
         </div>
       )}
 
-      <div className="bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden">
-        <table className="w-full text-left text-sm whitespace-nowrap">
-          <thead className="bg-surface-50 text-surface-600 border-b border-surface-200">
-            <tr>
-              <th className="py-3 px-4 font-semibold">이름</th>
-              <th className="py-3 px-4 font-semibold">소속/직책</th>
-              <th className="py-3 px-4 font-semibold">위원회 역할</th>
-              <th className="py-3 px-4 font-semibold">상태</th>
-              <th className="py-3 px-4 font-semibold text-right">관리</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-surface-100">
-            {members.length === 0 ? (
+      {/* 모바일: 카드 뷰 */}
+      <div className="sm:hidden space-y-3">
+        {members.length === 0 && (
+          <div className="text-center py-10 text-surface-500 text-sm">등록된 위원이 없습니다.</div>
+        )}
+        {members.map((member) => (
+          <div key={member.id} className="bg-white rounded-xl border border-surface-200 p-4 shadow-sm">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-semibold text-surface-900">{member.name}</span>
+                  <span className={`px-2 py-0.5 text-xs font-semibold rounded-md ${member.isActive ? 'bg-success-100 text-success-700' : 'bg-surface-100 text-surface-600'}`}>
+                    {member.isActive ? '활동 중' : '비활동'}
+                  </span>
+                </div>
+                {member.department && (
+                  <p className="text-sm text-surface-500 mt-0.5">{member.department}</p>
+                )}
+                {member.role && (
+                  <p className="text-xs text-surface-400 mt-0.5">{member.role}</p>
+                )}
+              </div>
+              {deletingId === member.id ? (
+                <div className="flex flex-col items-end gap-2 shrink-0">
+                  <span className="text-xs text-danger-600 font-medium">삭제할까요?</span>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="danger" onClick={() => handleDelete(member.id)}>네</Button>
+                    <Button size="sm" variant="secondary" onClick={() => setDeletingId(null)}>아니요</Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex gap-2 shrink-0">
+                  <Button size="sm" variant="ghost" onClick={() => handleEdit(member)}>수정</Button>
+                  <Button size="sm" variant="danger" onClick={() => setDeletingId(member.id)}>삭제</Button>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* 데스크탑: 테이블 뷰 */}
+      <div className="hidden sm:block bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm whitespace-nowrap">
+            <thead className="bg-surface-50 text-surface-600 border-b border-surface-200">
               <tr>
-                <td colSpan={5} className="py-8 text-center text-surface-500">
-                  등록된 위원이 없습니다.
-                </td>
+                <th className="py-3 px-4 font-semibold">이름</th>
+                <th className="py-3 px-4 font-semibold">소속/직책</th>
+                <th className="py-3 px-4 font-semibold">위원회 역할</th>
+                <th className="py-3 px-4 font-semibold">상태</th>
+                <th className="py-3 px-4 font-semibold text-right">관리</th>
               </tr>
-            ) : (
-              members.map((member) => (
-                <tr key={member.id} className="hover:bg-surface-50 transition-colors">
-                  <td className="py-3 px-4 font-medium text-surface-900">{member.name}</td>
-                  <td className="py-3 px-4 text-surface-600">{member.department}</td>
-                  <td className="py-3 px-4 text-surface-600">{member.role}</td>
-                  <td className="py-3 px-4 text-surface-600">
-                    <span className={`px-2 py-1 text-xs font-semibold rounded-md ${member.isActive ? 'bg-success-100 text-success-700' : 'bg-surface-100 text-surface-600'}`}>
-                      {member.isActive ? '활동 중' : '비활동'}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4 text-right">
-                    {deletingId === member.id ? (
-                      <div className="flex items-center justify-end gap-2">
-                        <span className="text-xs text-red-600 font-medium">삭제할까요?</span>
-                        <Button size="sm" variant="danger" onClick={() => handleDelete(member.id)}>네</Button>
-                        <Button size="sm" variant="secondary" onClick={() => setDeletingId(null)}>아니요</Button>
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-end gap-2">
-                        <Button size="sm" variant="ghost" onClick={() => handleEdit(member)}>수정</Button>
-                        <Button size="sm" variant="danger" onClick={() => setDeletingId(member.id)}>삭제</Button>
-                      </div>
-                    )}
-                  </td>
+            </thead>
+            <tbody className="divide-y divide-surface-100">
+              {members.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-8 text-center text-surface-500">등록된 위원이 없습니다.</td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                members.map((member) => (
+                  <tr key={member.id} className="hover:bg-surface-50 transition-colors">
+                    <td className="py-3 px-4 font-medium text-surface-900">{member.name}</td>
+                    <td className="py-3 px-4 text-surface-600">{member.department}</td>
+                    <td className="py-3 px-4 text-surface-600">{member.role}</td>
+                    <td className="py-3 px-4">
+                      <span className={`px-2 py-1 text-xs font-semibold rounded-md ${member.isActive ? 'bg-success-100 text-success-700' : 'bg-surface-100 text-surface-600'}`}>
+                        {member.isActive ? '활동 중' : '비활동'}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-right">
+                      {deletingId === member.id ? (
+                        <div className="flex items-center justify-end gap-2">
+                          <span className="text-xs text-danger-600 font-medium">삭제할까요?</span>
+                          <Button size="sm" variant="danger" onClick={() => handleDelete(member.id)}>네</Button>
+                          <Button size="sm" variant="secondary" onClick={() => setDeletingId(null)}>아니요</Button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-end gap-2">
+                          <Button size="sm" variant="ghost" onClick={() => handleEdit(member)}>수정</Button>
+                          <Button size="sm" variant="danger" onClick={() => setDeletingId(member.id)}>삭제</Button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

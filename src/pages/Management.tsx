@@ -74,7 +74,7 @@ export function Management() {
       <div className="flex space-x-2 border-b border-surface-200">
         <button
           onClick={() => setActiveTab("buildings")}
-          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+          className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors min-h-[44px] ${
             activeTab === "buildings" ? "border-primary-500 text-primary-600" : "border-transparent text-surface-500 hover:text-surface-700"
           }`}
         >
@@ -82,7 +82,7 @@ export function Management() {
         </button>
         <button
           onClick={() => setActiveTab("departments")}
-          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+          className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors min-h-[44px] ${
             activeTab === "departments" ? "border-primary-500 text-primary-600" : "border-transparent text-surface-500 hover:text-surface-700"
           }`}
         >
@@ -116,8 +116,8 @@ export function Management() {
               </Button>
             </div>
 
-            <div className="border border-surface-200 rounded-lg overflow-hidden">
-              <table className="w-full text-sm text-left">
+            <div className="border border-surface-200 rounded-lg overflow-hidden overflow-x-auto">
+              <table className="w-full text-sm text-left whitespace-nowrap">
                 <thead className="bg-surface-50 text-surface-500 border-b border-surface-200 uppercase text-xs font-semibold">
                   <tr>
                     <th className="px-4 py-3 w-32">건물 코드</th>
@@ -200,8 +200,8 @@ export function Management() {
               </Button>
             </div>
 
-            <div className="border border-surface-200 rounded-lg overflow-hidden h-[500px] overflow-y-auto">
-              <table className="w-full text-sm text-left relative">
+            <div className="border border-surface-200 rounded-lg overflow-hidden max-h-[60vh] overflow-y-auto overflow-x-auto">
+              <table className="w-full text-sm text-left whitespace-nowrap relative">
                 <thead className="bg-surface-50 text-surface-500 border-b border-surface-200 uppercase text-xs font-semibold sticky top-0 z-10 shadow-sm">
                   <tr>
                     <th className="px-4 py-3 w-28">부서 코드</th>
