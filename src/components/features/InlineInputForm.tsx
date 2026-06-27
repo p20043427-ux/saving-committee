@@ -7,6 +7,7 @@ import { useOrganization } from "@/src/components/layout/OrganizationProvider";
 import { Button } from "@/src/components/ui/Button";
 import { Select, Textarea } from "@/src/components/ui/Input";
 import { toast } from "@/src/components/ui/Toast";
+import { useAuditLog } from "@/src/hooks/useAuditLog";
 
 interface InlineInputFormProps {
   buildingId: string;
@@ -20,6 +21,7 @@ interface InlineInputFormProps {
 
 export function InlineInputForm({ buildingId, departmentId, inspectionDate, defaultInspector = "", members = [], onSuccess, onCancel }: InlineInputFormProps) {
   const { user } = useAuth();
+  const { log } = useAuditLog();
   const { buildings, departments } = useOrganization();
   const [inspector, setInspector] = useState(defaultInspector);
   const [notes, setNotes] = useState("");
@@ -90,6 +92,7 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
       if (error) throw error;
 
       toast.success("점검 데이터가 저장되었습니다.");
+      await log("CREATE", "sc_records", recordId, `${deptName} 점검 입력 (${inspector}, ${status})`);
       setSuccessMsg(`${inspector}님 점검 결과 저장 완료`);
       setTimeout(() => { onSuccess(); }, 1500);
     } catch (error) {

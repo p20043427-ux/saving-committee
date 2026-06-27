@@ -1,10 +1,13 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/src/lib/supabase';
 
+export type UserRole = 'admin' | 'member' | 'viewer';
+
 interface AppUser {
   uid: string;
   email?: string | null;
   name?: string | null;
+  role: UserRole;
 }
 
 interface AuthContextType {
@@ -13,6 +16,7 @@ interface AuthContextType {
   signIn: (email: string, pass: string) => Promise<void>;
   signUp: (email: string, pass: string, name: string) => Promise<boolean>;
   logout: () => Promise<void>;
+  updateRole: (uid: string, role: UserRole) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -21,16 +25,19 @@ const AuthContext = createContext<AuthContextType>({
   signIn: async () => {},
   signUp: async () => false,
   logout: async () => {},
+  updateRole: async () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
 
 function toAppUser(u: { id: string; email?: string | null; user_metadata?: Record<string, unknown> } | undefined): AppUser | null {
   if (!u) return null;
+  const role = (u.user_metadata?.role as UserRole) ?? 'admin'; // 기존 계정은 admin 기본값
   return {
     uid: u.id,
     email: u.email,
     name: (u.user_metadata?.name as string) ?? null,
+    role,
   };
 }
 
@@ -57,12 +64,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) throw error;
   };
 
-  // 반환값: true = 이메일 인증 없이 즉시 로그인됨, false = 이메일 인증 필요
   const signUp = async (email: string, pass: string, name: string): Promise<boolean> => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password: pass,
-      options: { data: { name } },
+      options: { data: { name, role: 'member' as UserRole } },
     });
     if (error) throw error;
     return !!data.session;
@@ -72,8 +78,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signOut();
   };
 
+  const updateRole = async (uid: string, role: UserRole) => {
+    const { error } = await supabase.auth.admin.updateUserById(uid, {
+      user_metadata: { role },
+    });
+    if (error) throw error;
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signUp, logout }}>
+    <AuthContext.Provider value={{ user, loading, signIn, signUp, logout, updateRole }}>
       {children}
     </AuthContext.Provider>
   );

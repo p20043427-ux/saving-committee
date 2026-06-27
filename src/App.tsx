@@ -1,18 +1,29 @@
-import React from "react";
+import React, { lazy, Suspense } from "react";
 import { HospitalLogo } from "./components/ui/HospitalLogo";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router";
 import { AppLayout } from "./components/layout/AppLayout";
-import { Dashboard } from "./pages/Dashboard";
-import { Monitoring } from "./pages/Monitoring";
-import { Management } from "./pages/Management";
-import { Admin } from "./pages/Admin";
-import { YearlyReport } from "./pages/YearlyReport";
-import { DataManagement } from "./pages/DataManagement";
-import { Committee } from "./pages/Committee";
-import { Schedule } from "./pages/Schedule";
-import { Events } from "./pages/Events";
-import { Login } from "./pages/Login";
-import { SignUp } from "./pages/SignUp";
+import { SkeletonCard } from "./components/ui/Skeleton";
+
+const Dashboard = lazy(() => import("./pages/Dashboard").then(m => ({ default: m.Dashboard })));
+const Monitoring = lazy(() => import("./pages/Monitoring").then(m => ({ default: m.Monitoring })));
+const Management = lazy(() => import("./pages/Management").then(m => ({ default: m.Management })));
+const Admin = lazy(() => import("./pages/Admin").then(m => ({ default: m.Admin })));
+const YearlyReport = lazy(() => import("./pages/YearlyReport").then(m => ({ default: m.YearlyReport })));
+const DataManagement = lazy(() => import("./pages/DataManagement").then(m => ({ default: m.DataManagement })));
+const Committee = lazy(() => import("./pages/Committee").then(m => ({ default: m.Committee })));
+const Schedule = lazy(() => import("./pages/Schedule").then(m => ({ default: m.Schedule })));
+const Events = lazy(() => import("./pages/Events").then(m => ({ default: m.Events })));
+const Login = lazy(() => import("./pages/Login").then(m => ({ default: m.Login })));
+const SignUp = lazy(() => import("./pages/SignUp").then(m => ({ default: m.SignUp })));
+
+function PageFallback() {
+  return (
+    <div className="space-y-4 p-4">
+      <SkeletonCard />
+      <SkeletonCard />
+    </div>
+  );
+}
 import { AuthProvider, useAuth } from "./components/auth/AuthProvider";
 import { OrganizationProvider } from "./components/layout/OrganizationProvider";
 import { InstallPrompt, IOSInstallGuide } from "./components/ui/InstallPrompt";
@@ -38,7 +49,9 @@ function ProtectedRoutes() {
   return (
     <ErrorBoundary>
       <OrganizationProvider>
-        <AppLayout />
+        <Suspense fallback={<PageFallback />}>
+          <AppLayout />
+        </Suspense>
       </OrganizationProvider>
     </ErrorBoundary>
   );
@@ -49,8 +62,8 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<SignUp />} />
+          <Route path="/login" element={<Suspense fallback={null}><Login /></Suspense>} />
+          <Route path="/signup" element={<Suspense fallback={null}><SignUp /></Suspense>} />
           <Route path="/" element={<ProtectedRoutes />}>
             <Route index element={<Dashboard />} />
             <Route path="monitoring" element={<Monitoring />} />

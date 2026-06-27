@@ -1,6 +1,7 @@
 import { Menu, LogOut, Search } from "lucide-react";
 import { useLocation, useNavigate } from "react-router";
 import { useAuth } from "@/src/components/auth/AuthProvider";
+import { usePermission } from "@/src/hooks/usePermission";
 import { HospitalLogo } from "@/src/components/ui/HospitalLogo";
 
 interface TopbarProps {
@@ -20,8 +21,15 @@ const PAGE_LABELS: Record<string, string> = {
   "/admin": "시스템 설정",
 };
 
+const ROLE_CHIP: Record<string, string> = {
+  admin: "text-primary-700 bg-primary-50 border-primary-200",
+  member: "text-success-700 bg-success-50 border-success-200",
+  viewer: "text-surface-600 bg-surface-100 border-surface-200",
+};
+
 export function Topbar({ onToggleMenu, onSearchClick }: TopbarProps) {
   const { user, logout } = useAuth();
+  const { roleLabel, role } = usePermission();
   const location = useLocation();
   const navigate = useNavigate();
   const pageLabel = PAGE_LABELS[location.pathname] ?? "절약위원회";
@@ -88,6 +96,9 @@ export function Topbar({ onToggleMenu, onSearchClick }: TopbarProps) {
         {user?.name && (
           <span className="hidden md:inline text-xs text-surface-500">{user.name}</span>
         )}
+        <span className={`hidden md:inline text-[10px] font-semibold px-1.5 py-0.5 rounded border ${ROLE_CHIP[role] ?? ROLE_CHIP.viewer}`}>
+          {roleLabel}
+        </span>
 
         <div
           className="w-7 h-7 rounded-full bg-primary-700 flex items-center justify-center text-white text-xs font-bold cursor-default"
