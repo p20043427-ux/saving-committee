@@ -5,6 +5,15 @@ import { supabase } from "@/src/lib/supabase";
 import { liveQuery } from "@/src/lib/db";
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
 import { SkeletonCard } from "@/src/components/ui/Skeleton";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+} from "recharts";
 
 interface ScheduleRow {
   id: string;
@@ -28,11 +37,19 @@ interface RecordSummary {
   total_score: number;
 }
 
+interface MonthlyRecord {
+  department_id: string;
+  status: string;
+  total_score: number;
+  date: string;
+}
+
 export function Dashboard() {
   const { departments, buildings, isLoading: orgLoading } = useOrganization();
   const [schedules, setSchedules] = useState<ScheduleRow[]>([]);
   const [events, setEvents] = useState<EventRow[]>([]);
   const [todayRecords, setTodayRecords] = useState<RecordSummary[]>([]);
+  const [monthlyRecords, setMonthlyRecords] = useState<MonthlyRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const today = new Date().toISOString().split("T")[0];
@@ -88,6 +105,18 @@ export function Dashboard() {
     );
     unsubs.push(unsubRecords);
 
+    const unsubMonthly = liveQuery<MonthlyRecord>(
+      "sc_records_monthly",
+      () =>
+        supabase
+          .from("sc_records")
+          .select("department_id, status, total_score, date")
+          .gte("date", currentMonth + "-01T00:00:00")
+          .lte("date", currentMonth + "-31T23:59:59"),
+      (rows) => setMonthlyRecords(rows)
+    );
+    unsubs.push(unsubMonthly);
+
     return () => unsubs.forEach((u) => u());
   }, [today, currentMonth]);
 
@@ -101,6 +130,26 @@ export function Dashboard() {
     inspectedCount > 0
       ? Math.round((todayRecords.reduce((s, r) => s + r.total_score, 0) / inspectedCount) * 10) / 10
       : null;
+
+  // 최근 7일 일별 점검 수
+  const last7Days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - (6 - i));
+    return d.toISOString().split("T")[0];
+  });
+
+  const dailyChartData = last7Days.map((date) => ({
+    date: date.slice(5), // MM-DD
+    count: monthlyRecords.filter((r) => r.date.startsWith(date)).length,
+  }));
+
+  // 이번 달 달성 통계
+  const monthlyDays = [...new Set(monthlyRecords.map((r) => r.date.split("T")[0]))].length;
+  const monthlyTotal = monthlyRecords.length;
+  const monthlyAvg =
+    monthlyTotal > 0
+      ? (monthlyRecords.reduce((s, r) => s + r.total_score, 0) / monthlyTotal).toFixed(1)
+      : "-";
 
   const mobileNavItems = [
     { to: "/monitoring", label: "점검 조회/입력", color: "bg-primary-100 text-primary-700" },
@@ -257,6 +306,64 @@ export function Dashboard() {
             </Card>
           </div>
         )}
+
+        {/* Monthly KPI row */}
+        <div className="grid grid-cols-3 gap-4">
+          <Card className="border-surface-200 shadow-sm">
+            <CardContent className="p-5">
+              <div className="text-xs text-surface-500 uppercase tracking-wide mb-1">이번 달 점검 일수</div>
+              <div className="flex items-baseline gap-1 mt-2">
+                <span className="text-3xl font-bold text-primary-700">{monthlyDays}</span>
+                <span className="text-surface-400 text-sm">일</span>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-surface-200 shadow-sm">
+            <CardContent className="p-5">
+              <div className="text-xs text-surface-500 uppercase tracking-wide mb-1">이번 달 총 점검 건수</div>
+              <div className="flex items-baseline gap-1 mt-2">
+                <span className="text-3xl font-bold text-info-600">{monthlyTotal}</span>
+                <span className="text-surface-400 text-sm">건</span>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-surface-200 shadow-sm">
+            <CardContent className="p-5">
+              <div className="text-xs text-surface-500 uppercase tracking-wide mb-1">이번 달 평균 점수</div>
+              <div className="flex items-baseline gap-1 mt-2">
+                <span className="text-3xl font-bold text-accent-600">{monthlyAvg}</span>
+                <span className="text-surface-400 text-sm">/ 20점</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* 최근 7일 BarChart */}
+        <Card className="border-surface-200 shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">최근 7일 점검 현황</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={120}>
+              <BarChart
+                data={dailyChartData}
+                margin={{ top: 0, right: 0, left: -20, bottom: 0 }}
+              >
+                <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                <Tooltip contentStyle={{ fontSize: 12 }} />
+                <Bar dataKey="count" name="점검 수" radius={[3, 3, 0, 0]}>
+                  {dailyChartData.map((entry, index) => (
+                    <Cell
+                      key={index}
+                      fill={entry.date === today.slice(5) ? "#2aafa0" : "#93c5fd"}
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
 
         {/* Events + Schedules */}
         <div className="grid grid-cols-2 gap-6">

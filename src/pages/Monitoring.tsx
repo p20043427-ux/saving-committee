@@ -8,6 +8,7 @@ import { InlineInputForm } from "@/src/components/features/InlineInputForm";
 import { DatePickerWithData } from "@/src/components/features/DatePickerWithData";
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
 import { toast } from "../components/ui/Toast";
+import { Printer } from "lucide-react";
 
 interface RecordData {
   departmentId: string;
@@ -32,6 +33,7 @@ export function Monitoring() {
   );
   const [globalInspector, setGlobalInspector] = useState<string>("");
   
+  const [prevRecords, setPrevRecords] = useState<{ departmentId: string; totalScore: number }[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [expandedDeptId, setExpandedDeptId] = useState<string | null>(null);
@@ -91,6 +93,26 @@ export function Monitoring() {
     );
 
     setExpandedDeptId(null); // 날짜 변경 시 폼 닫기
+
+    // 직전 점검 데이터 조회 (selectedDate 이전 각 부서별 최근 1건)
+    supabase
+      .from("sc_records")
+      .select("department_id, total_score, date")
+      .lt("date", selectedDate + "T00:00:00")
+      .order("date", { ascending: false })
+      .limit(200)
+      .then(({ data }) => {
+        if (!data) return;
+        const seen = new Set<string>();
+        const prev: { departmentId: string; totalScore: number }[] = [];
+        for (const r of data) {
+          if (!seen.has(r.department_id)) {
+            seen.add(r.department_id);
+            prev.push({ departmentId: r.department_id, totalScore: r.total_score });
+          }
+        }
+        setPrevRecords(prev);
+      });
 
     return () => {
       unsubscribe();
@@ -201,7 +223,15 @@ export function Monitoring() {
           <h1 className="text-2xl font-bold text-surface-900 tracking-tight">일자별 점검 현황</h1>
           <p className="text-surface-500 mt-1">이전 기록 조회 및 해당 일자 점검표를 개별 입력합니다.</p>
         </div>
-        <div className="flex items-center space-x-2 w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0 scrollbar-hide -mx-2 px-2 sm:mx-0 sm:px-0">
+        <div className="flex items-center space-x-2 w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0 scrollbar-hide -mx-2 px-2 sm:mx-0 sm:px-0 no-print">
+           <button
+             type="button"
+             onClick={() => window.print()}
+             className="flex-shrink-0 px-3 py-2 bg-surface-100 border border-surface-300 text-surface-700 font-medium rounded-lg text-sm hover:bg-surface-200 transition-colors focus:ring-2 focus:ring-primary-500 outline-none flex items-center gap-1.5"
+           >
+             <Printer size={14} />
+             <span className="hidden sm:inline">인쇄</span>
+           </button>
            <button
              type="button"
              onClick={exportToCSV}
@@ -294,6 +324,8 @@ export function Monitoring() {
                   <div className="space-y-3">
                     {bDepts.map(dept => {
                       const record = getDepartmentRecord(dept.id);
+                      const prevRecord = prevRecords.find(r => r.departmentId === dept.id);
+                      const delta = record && prevRecord ? record.totalScore - prevRecord.totalScore : null;
                       const status = record ? record.status : "미점검";
                       const score = record ? record.totalScore : null;
                       const isExpanded = expandedDeptId === dept.id;
@@ -321,7 +353,14 @@ export function Monitoring() {
                             <div className="flex flex-col">
                               <span className="font-semibold text-sm break-keep">{dept.name}</span>
                               {score !== null ? (
-                                <span className="text-xs mt-0.5 opacity-80 font-mono font-medium break-keep">총점: {score}점 / 20점</span>
+                                <span className="text-xs mt-0.5 opacity-80 font-mono font-medium break-keep flex items-center gap-1">
+                                  총점: {score}점 / 20점
+                                  {delta !== null && (
+                                    <span className={`font-bold ${delta > 0 ? "text-success-600" : delta < 0 ? "text-danger-600" : "text-surface-400"}`}>
+                                      {delta > 0 ? `↑${delta}` : delta < 0 ? `↓${Math.abs(delta)}` : "─"}
+                                    </span>
+                                  )}
+                                </span>
                               ) : (
                                 <span className="text-xs mt-0.5 text-primary-500 font-medium break-keep">클릭하여 점검 입력</span>
                               )}

@@ -28,7 +28,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
     <aside
       aria-label="메인 네비게이션"
       className={cn(
-        "w-60 bg-primary-900 flex flex-col shrink-0",
+        "no-print w-60 bg-primary-900 flex flex-col shrink-0",
         "fixed md:static inset-y-0 left-0 z-50 transform transition-transform duration-300 ease-in-out md:transform-none",
         isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
       )}

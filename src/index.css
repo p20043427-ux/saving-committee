@@ -134,3 +134,11 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+@media print {
+  .no-print { display: none !important; }
+  body { background: white !important; color: black !important; }
+  aside, nav { display: none !important; }
+  main { padding: 0 !important; }
+  .print-break { page-break-before: always; }
+}

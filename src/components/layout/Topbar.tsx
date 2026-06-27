@@ -1,10 +1,11 @@
-import { Menu, LogOut } from "lucide-react";
+import { Menu, LogOut, Search } from "lucide-react";
 import { useLocation, useNavigate } from "react-router";
 import { useAuth } from "@/src/components/auth/AuthProvider";
 import { HospitalLogo } from "@/src/components/ui/HospitalLogo";
 
 interface TopbarProps {
   onToggleMenu?: () => void;
+  onSearchClick?: () => void;
 }
 
 const PAGE_LABELS: Record<string, string> = {
@@ -19,7 +20,7 @@ const PAGE_LABELS: Record<string, string> = {
   "/admin": "시스템 설정",
 };
 
-export function Topbar({ onToggleMenu }: TopbarProps) {
+export function Topbar({ onToggleMenu, onSearchClick }: TopbarProps) {
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -35,7 +36,7 @@ export function Topbar({ onToggleMenu }: TopbarProps) {
     : user?.email?.slice(0, 1).toUpperCase() ?? "관";
 
   return (
-    <header className="flex justify-between items-center shrink-0 bg-white border-b border-surface-200 px-6 h-14">
+    <header className="no-print flex justify-between items-center shrink-0 bg-white border-b border-surface-200 px-6 h-14">
       <div className="flex items-center gap-3">
         <button
           onClick={onToggleMenu}
@@ -58,6 +59,17 @@ export function Topbar({ onToggleMenu }: TopbarProps) {
       </div>
 
       <div className="flex items-center gap-3">
+        <button
+          onClick={onSearchClick}
+          aria-label="검색 (Ctrl+K)"
+          title="검색 (Ctrl+K)"
+          className="hidden sm:flex items-center gap-2 px-3 py-1.5 text-xs text-surface-400 border border-surface-200 rounded-lg hover:bg-surface-50 hover:text-surface-600 transition-colors"
+        >
+          <Search className="w-3.5 h-3.5" aria-hidden="true" />
+          <span>검색</span>
+          <kbd className="text-[10px] border border-surface-200 rounded px-1">Ctrl+K</kbd>
+        </button>
+
         <div
           role="status"
           aria-live="polite"
