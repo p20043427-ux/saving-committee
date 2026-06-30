@@ -22,7 +22,7 @@ interface InlineInputFormProps {
 export function InlineInputForm({ buildingId, departmentId, inspectionDate, defaultInspector = "", members = [], onSuccess, onCancel }: InlineInputFormProps) {
   const { user } = useAuth();
   const { log } = useAuditLog();
-  const { buildings, departments } = useOrganization();
+  const { departments } = useOrganization();
   const [inspector, setInspector] = useState(defaultInspector);
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -56,7 +56,6 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
 
     setIsSubmitting(true);
     try {
-      const bName = buildings.find(b => b.id === buildingId)?.name || "";
       const deptName = departments.find(d => d.id === departmentId)?.name || "";
       
       const scoreObj = {

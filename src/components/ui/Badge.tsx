@@ -1,9 +1,7 @@
 import * as React from "react";
 import { cn } from "@/src/lib/utils";
 
-export interface BadgeProps {
-  className?: string;
-  children?: React.ReactNode;
+export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: "default" | "secondary" | "destructive" | "outline" | "success" | "warning";
 }
 
@@ -27,7 +25,7 @@ function Badge({ className, variant = "default", children, ...props }: BadgeProp
         },
         className
       )}
-      {...(props as any)}
+      {...props}
     >
       {children}
     </div>

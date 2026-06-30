@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/src/lib/supabase";
 import { liveQuery, rowToRecord, computeStatus, RecordRow } from "@/src/lib/db";
-import { useAuth } from "@/src/components/auth/AuthProvider";
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
 import { Download, CalendarDays, BarChart2, ArrowUp, ArrowDown } from "lucide-react";
 import { toast } from "../components/ui/Toast";
@@ -29,7 +28,6 @@ export interface RecordDoc {
 }
 
 export function DataManagement() {
-  const { user } = useAuth();
   const { buildings, departments, isLoading: orgLoading } = useOrganization();
   const [allRecords, setAllRecords] = useState<RecordDoc[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -58,7 +56,6 @@ export function DataManagement() {
   // Edit State
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<RecordDoc>>({});
-  const [isExporting, setIsExporting] = useState(false);
   const { confirm, dialogProps } = useConfirm();
 
   // Selection State (Raw)
@@ -156,7 +153,7 @@ export function DataManagement() {
 
   // Computed: Display Records (Raw)
   const filteredRecords = useMemo(() => {
-    let filtered = allRecords.filter(r => {
+    const filtered = allRecords.filter(r => {
       const d = r.date.split("T")[0];
       if (filterType === "month") {
         return d.startsWith(filterMonth);
@@ -223,7 +220,7 @@ export function DataManagement() {
     });
     
     type AggRow = { departmentId: string; departmentName: string; yearlyAvg: number | null } & Record<string, number | null | string>;
-    let resultArr = Object.values(deptStats).map(dept => {
+    const resultArr = Object.values(deptStats).map(dept => {
       const result: AggRow = { departmentId: dept.id, departmentName: dept.name, yearlyAvg: null };
       let yearlyTotal = 0;
       let yearlyCount = 0;
@@ -243,8 +240,8 @@ export function DataManagement() {
 
     if (aggSortConfig) {
       resultArr.sort((a, b) => {
-        let aValue = a[aggSortConfig.key];
-        let bValue = b[aggSortConfig.key];
+        const aValue = a[aggSortConfig.key];
+        const bValue = b[aggSortConfig.key];
 
         if (aValue === null && bValue !== null) return 1;
         if (aValue !== null && bValue === null) return -1;

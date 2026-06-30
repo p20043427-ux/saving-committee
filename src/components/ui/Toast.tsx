@@ -1,5 +1,5 @@
-import { Toaster, toast } from "react-hot-toast";
-export { toast };
+export { toast } from "react-hot-toast";
+import { Toaster } from "react-hot-toast";
 export function AppToaster() {
   return (
     <Toaster

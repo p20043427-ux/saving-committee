@@ -115,10 +115,6 @@ export function Admin() {
   const [addingCategory, setAddingCategory] = useState<string | null>(null);
   const [newItemName, setNewItemName] = useState("");
 
-  useEffect(() => {
-    fetchItems();
-  }, []);
-
   const fetchItems = async () => {
     const { data, error } = await supabase
       .from("sc_inspection_items")
@@ -136,6 +132,10 @@ export function Admin() {
     }
     setItemsLoading(false);
   };
+
+  useEffect(() => {
+    fetchItems();
+  }, []);
 
   const startEditItem = (item: InspectionItem) => {
     setEditingItemId(item.id);
@@ -315,7 +315,7 @@ export function Admin() {
     setImportResult(null);
     try {
       const text = await file.text();
-      const lines = text.replace(/^﻿/, "").split("\n").filter((l) => l.trim());
+      const lines = text.replace(/^\ufeff/, "").split("\n").filter((l) => l.trim());
       if (lines.length < 2) throw new Error("데이터 행이 없습니다.");
       const delimiter = lines[0].includes("\t") ? "\t" : ",";
       const headers = lines[0].split(delimiter).map((h) => h.trim().replace(/^"|"$/g, ""));

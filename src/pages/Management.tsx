@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/Ca
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
 import { Button } from "@/src/components/ui/Button";
 import { Input, Select } from "@/src/components/ui/Input";
-import { toast } from "../components/ui/Toast";
 import { useConfirm } from "../hooks/useConfirm";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 

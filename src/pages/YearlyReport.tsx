@@ -2,7 +2,6 @@ import { useState, useMemo, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/src/components/ui/Card";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { supabase } from "@/src/lib/supabase";
-import { useAuth } from "@/src/components/auth/AuthProvider";
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
 
 interface RecordData {
@@ -19,8 +18,7 @@ interface RecordData {
 }
 
 export function YearlyReport() {
-  const { user } = useAuth();
-  const { buildings, departments, isLoading: orgLoading } = useOrganization();
+  const { departments, isLoading: orgLoading } = useOrganization();
   const [selectedDept, setSelectedDept] = useState<string>(""); 
   const [records, setRecords] = useState<RecordData[]>([]);
   const [isLoading, setIsLoading] = useState(true);

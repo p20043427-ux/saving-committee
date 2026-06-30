@@ -1,9 +1,8 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/Card";
 import { Badge } from "@/src/components/ui/Badge";
 import { supabase } from "@/src/lib/supabase";
 import { liveQuery } from "@/src/lib/db";
-import { useAuth } from "@/src/components/auth/AuthProvider";
 import { InlineInputForm } from "@/src/components/features/InlineInputForm";
 import { DatePickerWithData } from "@/src/components/features/DatePickerWithData";
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
@@ -22,7 +21,6 @@ interface RecordData {
 }
 
 export function Monitoring() {
-  const { user } = useAuth();
   const { buildings, departments, isLoading: orgLoading } = useOrganization();
   const [records, setRecords] = useState<RecordData[]>([]);
   const [members, setMembers] = useState<{id: string, name: string}[]>([]);
@@ -192,15 +190,6 @@ export function Monitoring() {
 
   const getDepartmentRecord = (deptId: string) => {
     return records.find(r => r.departmentId === deptId);
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "정상": return "bg-primary-50 border-primary-200 text-primary-700";
-      case "주의": return "bg-amber-50 border-amber-200 text-amber-700";
-      case "긴급": return "bg-red-50 border-red-200 text-red-700 animate-pulse";
-      default: return "bg-surface-50 border-surface-200 text-surface-500 hover:bg-surface-100 cursor-pointer";
-    }
   };
 
   const getStatusIcon = (status: string) => {
