@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/src/lib/supabase";
 import { liveQuery } from "@/src/lib/db";
 import { CommitteeMember } from "./Committee";
@@ -19,9 +19,12 @@ export function Events() {
   const [members, setMembers] = useState<CommitteeMember[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Default to current month
+  const [activeTab, setActiveTab] = useState<"monthly" | "yearly">("monthly");
+
+  // Default to current month / year
   const [filterMonth, setFilterMonth] = useState(new Date().toISOString().slice(0, 7));
-  
+  const [filterYear, setFilterYear] = useState(new Date().getFullYear().toString());
+
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -59,15 +62,22 @@ export function Events() {
       (error) => console.error("Error fetching members:", error)
     );
 
-    // Fetch events
+    // Fetch events — 월별 탭은 선택된 달만, 연간 탭은 선택된 연도 전체를 조회
     const unsubscribeEvents = liveQuery<any>(
       "sc_events",
       () =>
-        supabase
-          .from("sc_events")
-          .select("*")
-          .eq("month", filterMonth)
-          .order("date", { ascending: true }),
+        activeTab === "yearly"
+          ? supabase
+              .from("sc_events")
+              .select("*")
+              .gte("month", `${filterYear}-01`)
+              .lte("month", `${filterYear}-12`)
+              .order("date", { ascending: true })
+          : supabase
+              .from("sc_events")
+              .select("*")
+              .eq("month", filterMonth)
+              .order("date", { ascending: true }),
       (rows) => {
         setEvents(
           rows.map((r) => ({
@@ -93,7 +103,7 @@ export function Events() {
       unsubscribeMembers();
       unsubscribeEvents();
     };
-  }, [filterMonth]);
+  }, [activeTab, filterMonth, filterYear]);
 
   const resetForm = () => {
     setFormData({
@@ -173,6 +183,18 @@ export function Events() {
 
   const displayEvents = events.filter(s => s.month === filterMonth);
 
+  // 연간 탭: 위원별 월별 참석 여부(O/X) 집계
+  const yearlyAttendance = useMemo(() => {
+    return members.map(member => {
+      const monthly = Array.from({ length: 12 }, (_, i) => {
+        const monthKey = `${filterYear}-${String(i + 1).padStart(2, "0")}`;
+        return events.some(evt => evt.month === monthKey && evt.attendees?.includes(member.name));
+      });
+      const attendedMonths = monthly.filter(Boolean).length;
+      return { member, monthly, attendedMonths };
+    });
+  }, [members, events, filterYear]);
+
   if (isLoading) {
     return <div className="p-8 text-center text-surface-500">행사 정보를 불러보는 중입니다...</div>;
   }
@@ -185,12 +207,25 @@ export function Events() {
           <p className="text-surface-500 text-sm mt-1">위원회 단위의 행사, 회의 내역 및 참석자를 기록합니다.</p>
         </div>
         <div className="flex items-center gap-4">
-          <input
-            type="month"
-            value={filterMonth}
-            onChange={(e) => setFilterMonth(e.target.value)}
-            className="rounded-lg border-surface-300 text-surface-900 font-semibold focus:ring-primary-500 focus:border-primary-500"
-          />
+          {activeTab === "monthly" ? (
+            <input
+              type="month"
+              value={filterMonth}
+              onChange={(e) => setFilterMonth(e.target.value)}
+              className="rounded-lg border-surface-300 text-surface-900 font-semibold focus:ring-primary-500 focus:border-primary-500"
+            />
+          ) : (
+            <select
+              value={filterYear}
+              onChange={(e) => setFilterYear(e.target.value)}
+              className="rounded-lg border-surface-300 text-surface-900 font-semibold focus:ring-primary-500 focus:border-primary-500"
+            >
+              {Array.from({ length: 5 }).map((_, i) => {
+                const y = (new Date().getFullYear() - 2 + i).toString();
+                return <option key={y} value={y}>{y}년</option>;
+              })}
+            </select>
+          )}
           <button
             onClick={() => setIsFormOpen(true)}
             className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium transition-colors whitespace-nowrap"
@@ -198,6 +233,26 @@ export function Events() {
             + 행사 기록
           </button>
         </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex space-x-1 border-b border-surface-200">
+        <button
+          onClick={() => setActiveTab("monthly")}
+          className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors min-h-[44px] ${
+            activeTab === "monthly" ? "border-primary-500 text-primary-600" : "border-transparent text-surface-500 hover:text-surface-700 hover:border-surface-300"
+          }`}
+        >
+          월별 상세
+        </button>
+        <button
+          onClick={() => setActiveTab("yearly")}
+          className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors min-h-[44px] ${
+            activeTab === "yearly" ? "border-primary-500 text-primary-600" : "border-transparent text-surface-500 hover:text-surface-700 hover:border-surface-300"
+          }`}
+        >
+          연간 참여 현황
+        </button>
       </div>
 
       {isFormOpen && (
@@ -283,6 +338,8 @@ export function Events() {
         </div>
       )}
 
+      {activeTab === "monthly" && (
+      <>
       <div className="bg-white rounded-xl shadow-gh-sm border border-surface-200 overflow-hidden">
         {displayEvents.length === 0 ? (
           <div className="p-8 text-center text-surface-500">
@@ -416,6 +473,58 @@ export function Events() {
                   <tr>
                     <td colSpan={displayEvents.length + 2} className="py-8 text-center text-surface-500">등록된 위원이 없습니다.</td>
                   </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+      </>
+      )}
+
+      {activeTab === "yearly" && (
+        <div className="bg-white rounded-xl shadow-gh-sm border border-surface-200 overflow-hidden">
+          <div className="bg-surface-50 px-6 py-4 border-b border-surface-200">
+            <h2 className="text-lg font-bold text-surface-900">위원별 연간 참여 현황 <span className="text-sm font-normal text-surface-500 ml-2">({filterYear}년)</span></h2>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm whitespace-nowrap">
+              <thead className="bg-surface-50/50 text-surface-600 border-b border-surface-200">
+                <tr>
+                  <th className="py-3 px-4 font-semibold sticky left-0 bg-surface-50 z-10 w-48 shadow-[1px_0_0_0_var(--color-surface-200)]">위원명 (소속)</th>
+                  {Array.from({ length: 12 }, (_, i) => (
+                    <th key={i} className="py-3 px-4 font-semibold text-center">{i + 1}월</th>
+                  ))}
+                  <th className="py-3 px-4 font-semibold text-center bg-surface-100">연간 참석</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-surface-100">
+                {yearlyAttendance.length === 0 ? (
+                  <tr>
+                    <td colSpan={14} className="py-8 text-center text-surface-500">등록된 위원이 없습니다.</td>
+                  </tr>
+                ) : (
+                  yearlyAttendance.map(({ member, monthly, attendedMonths }) => (
+                    <tr key={member.id} className="hover:bg-surface-50 transition-colors">
+                      <td className="py-2 px-4 font-medium text-surface-900 sticky left-0 bg-white z-10 shadow-[1px_0_0_0_var(--color-surface-200)]">
+                        {member.name} <span className="text-xs text-surface-500 font-normal">({member.department || '-'})</span>
+                      </td>
+                      {monthly.map((attended, i) => (
+                        <td key={i} className="py-2 px-4 text-center">
+                          {attended ? (
+                            <span className="inline-flex w-6 h-6 rounded-full bg-success-100 text-success-600 items-center justify-center font-bold text-xs mx-auto">
+                              O
+                            </span>
+                          ) : (
+                            <span className="text-surface-300">-</span>
+                          )}
+                        </td>
+                      ))}
+                      <td className="py-2 px-4 text-center font-bold text-surface-700 bg-surface-50/30">
+                        {attendedMonths} / 12
+                      </td>
+                    </tr>
+                  ))
                 )}
               </tbody>
             </table>
