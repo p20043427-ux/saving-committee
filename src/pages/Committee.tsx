@@ -128,7 +128,7 @@ export function Committee() {
       </div>
 
       {isFormOpen && (
-        <div className="bg-white p-5 rounded-xl shadow-sm border border-surface-200">
+        <div className="bg-white p-5 rounded-xl shadow-gh-sm border border-surface-200">
           <h2 className="text-lg font-bold mb-4">{editingId ? "위원 정보 수정" : "새 위원 추가"}</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -188,7 +188,7 @@ export function Committee() {
           <div className="text-center py-10 text-surface-500 text-sm">등록된 위원이 없습니다.</div>
         )}
         {members.map((member) => (
-          <div key={member.id} className="bg-white rounded-xl border border-surface-200 p-4 shadow-sm">
+          <div key={member.id} className="bg-white rounded-xl border border-surface-200 p-4 shadow-gh-sm">
             <div className="flex items-start justify-between gap-2">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -224,7 +224,7 @@ export function Committee() {
       </div>
 
       {/* 데스크탑: 테이블 뷰 */}
-      <div className="hidden sm:block bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden">
+      <div className="hidden sm:block bg-white rounded-xl shadow-gh-sm border border-surface-200 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm whitespace-nowrap">
             <thead className="bg-surface-50 text-surface-600 border-b border-surface-200">

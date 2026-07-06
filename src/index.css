@@ -6,75 +6,81 @@
   --font-sans: "Pretendard", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 
-  /* Hospital HIS — Navy Blue primary */
-  --color-primary-50:  #eef2fb;
-  --color-primary-100: #d5e0f5;
-  --color-primary-200: #aac1eb;
-  --color-primary-300: #7fa2e1;
-  --color-primary-400: #5483d7;
-  --color-primary-500: #2964cd;
-  --color-primary-600: #1b4ea3;
-  --color-primary-700: #1b3f8b;
-  --color-primary-800: #14306a;
-  --color-primary-900: #0d2050;
-  --color-primary-950: #08112e;
+  /* Hospital HIS — Hospital Blue primary (좋은병원들 HI Design System) */
+  --color-primary-50:  #eff5fb;
+  --color-primary-100: #dce9f7;
+  --color-primary-200: #b7d2ee;
+  --color-primary-300: #85b2e0;
+  --color-primary-400: #4c8ccb;
+  --color-primary-500: #2270b4;
+  --color-primary-600: #0f5daa;
+  --color-primary-700: #124e89;
+  --color-primary-800: #113f6d;
+  --color-primary-900: #0f3053;
+  --color-primary-950: #0a2440;
 
-  /* Hospital HIS — Teal accent */
-  --color-accent-50:  #e8f8f6;
-  --color-accent-100: #c2edea;
-  --color-accent-200: #86dbd4;
-  --color-accent-300: #4ac9bf;
-  --color-accent-400: #2aafa0;
-  --color-accent-500: #228f83;
-  --color-accent-600: #1a6f66;
-  --color-accent-700: #135049;
-  --color-accent-800: #0c3430;
-  --color-accent-900: #061a18;
+  /* Hospital HIS — Mint accent (좋은병원들 HI Design System) */
+  --color-accent-50:  #ecf8f8;
+  --color-accent-100: #d4efef;
+  --color-accent-200: #a8dfdf;
+  --color-accent-300: #74cbcb;
+  --color-accent-400: #45b3b4;
+  --color-accent-500: #2d9d9f;
+  --color-accent-600: #248688;
+  --color-accent-700: #1e6f71;
+  --color-accent-800: #163739;
+  --color-accent-900: #0b1c1d;
 
-  --color-surface-50: var(--color-slate-50);
-  --color-surface-100: var(--color-slate-100);
-  --color-surface-200: var(--color-slate-200);
-  --color-surface-300: var(--color-slate-300);
-  --color-surface-400: var(--color-slate-400);
-  --color-surface-500: var(--color-slate-500);
-  --color-surface-600: var(--color-slate-600);
-  --color-surface-700: var(--color-slate-700);
-  --color-surface-800: var(--color-slate-800);
-  --color-surface-900: var(--color-slate-900);
-  --color-surface-950: var(--color-slate-950);
+  --color-surface-50:  #f6f8fb;
+  --color-surface-100: #eef2f7;
+  --color-surface-200: #e3e9f0;
+  --color-surface-300: #cdd6e1;
+  --color-surface-400: #a7b3c2;
+  --color-surface-500: #8493a5;
+  --color-surface-600: #64748b;
+  --color-surface-700: #475569;
+  --color-surface-800: #2c3a4d;
+  --color-surface-900: #16233a;
+  --color-surface-950: #0b1420;
 
-  /* Semantic status tokens */
-  --color-success-50: var(--color-emerald-50);
-  --color-success-100: var(--color-emerald-100);
-  --color-success-200: var(--color-emerald-200);
-  --color-success-500: var(--color-emerald-500);
-  --color-success-600: var(--color-emerald-600);
-  --color-success-700: var(--color-emerald-700);
-  --color-success-800: var(--color-emerald-800);
+  /* Semantic status tokens (좋은병원들 HI Design System) */
+  --color-success-50:  #e7f6ee;
+  --color-success-100: #cff0de;
+  --color-success-200: #a8e4c3;
+  --color-success-500: #1e9e5a;
+  --color-success-600: #178549;
+  --color-success-700: #14713f;
+  --color-success-800: #0f5730;
 
-  --color-warning-50: var(--color-amber-50);
-  --color-warning-100: var(--color-amber-100);
-  --color-warning-200: var(--color-amber-200);
-  --color-warning-500: var(--color-amber-500);
-  --color-warning-600: var(--color-amber-600);
-  --color-warning-700: var(--color-amber-700);
-  --color-warning-800: var(--color-amber-800);
+  --color-warning-50:  #fef3e4;
+  --color-warning-100: #fde3c0;
+  --color-warning-200: #fbcb8d;
+  --color-warning-500: #f78b1e;
+  --color-warning-600: #dd7710;
+  --color-warning-700: #b05e07;
+  --color-warning-800: #8a4a08;
 
-  --color-danger-50: var(--color-red-50);
-  --color-danger-100: var(--color-red-100);
-  --color-danger-200: var(--color-red-200);
-  --color-danger-500: var(--color-red-500);
-  --color-danger-600: var(--color-red-600);
-  --color-danger-700: var(--color-red-700);
-  --color-danger-800: var(--color-red-800);
+  --color-danger-50:  #fcedec;
+  --color-danger-100: #f8d6d5;
+  --color-danger-200: #f0afad;
+  --color-danger-500: #de4a47;
+  --color-danger-600: #c93e3b;
+  --color-danger-700: #b02e2c;
+  --color-danger-800: #8c2422;
 
-  --color-info-50: var(--color-blue-50);
-  --color-info-100: var(--color-blue-100);
-  --color-info-200: var(--color-blue-200);
-  --color-info-500: var(--color-blue-500);
-  --color-info-600: var(--color-blue-600);
-  --color-info-700: var(--color-blue-700);
-  --color-info-800: var(--color-blue-800);
+  --color-info-50:  #eff5fb;
+  --color-info-100: #dce9f7;
+  --color-info-200: #b7d2ee;
+  --color-info-500: #2270b4;
+  --color-info-600: #124e89;
+  --color-info-700: #113f6d;
+  --color-info-800: #0f3053;
+
+  /* Shadow scale — blue-tinted (좋은병원들 HI Design System) */
+  --shadow-gh-xs: 0 1px 2px rgba(15, 48, 83, 0.06);
+  --shadow-gh-sm: 0 1px 3px rgba(15, 48, 83, 0.08), 0 1px 2px rgba(15, 48, 83, 0.04);
+  --shadow-gh-md: 0 4px 12px rgba(15, 48, 83, 0.08), 0 1px 3px rgba(15, 48, 83, 0.05);
+  --shadow-gh-lg: 0 12px 32px rgba(15, 48, 83, 0.12), 0 2px 6px rgba(15, 48, 83, 0.06);
 }
 
 body {
@@ -105,21 +111,21 @@ body {
 
 @media (prefers-color-scheme: dark) {
   body {
-    background-color: #0f172a;
-    color: #e2e8f0;
+    background-color: #0b1420;
+    color: #e3e9f0;
   }
   :root {
     color-scheme: dark;
   }
-  .bg-white { background-color: #1e293b !important; }
-  .bg-surface-50 { background-color: #0f172a !important; }
-  .bg-surface-100 { background-color: #1e293b !important; }
-  .bg-surface-200 { background-color: #334155 !important; }
-  .text-surface-900 { color: #f1f5f9 !important; }
-  .text-surface-700 { color: #cbd5e1 !important; }
-  .text-surface-600 { color: #94a3b8 !important; }
+  .bg-white { background-color: #16233a !important; }
+  .bg-surface-50 { background-color: #0b1420 !important; }
+  .bg-surface-100 { background-color: #16233a !important; }
+  .bg-surface-200 { background-color: #2c3a4d !important; }
+  .text-surface-900 { color: #f6f8fb !important; }
+  .text-surface-700 { color: #cdd6e1 !important; }
+  .text-surface-600 { color: #a7b3c2 !important; }
   .text-surface-500 { color: #64748b !important; }
-  .border-surface-200 { border-color: #334155 !important; }
+  .border-surface-200 { border-color: #2c3a4d !important; }
   .border-surface-300 { border-color: #475569 !important; }
 }
 

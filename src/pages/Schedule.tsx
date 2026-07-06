@@ -196,7 +196,7 @@ export function Schedule() {
           />
           <button
             onClick={() => setIsFormOpen(true)}
-            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium shadow-sm transition-colors whitespace-nowrap"
+            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium transition-colors whitespace-nowrap"
           >
             + 스케줄 추가
           </button>
@@ -204,7 +204,7 @@ export function Schedule() {
       </div>
 
       {isFormOpen && (
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-surface-200">
+        <div className="bg-white p-6 rounded-xl shadow-gh-sm border border-surface-200">
           <h2 className="text-lg font-bold mb-4">{editingId ? "스케줄 수정" : "새 스케줄 추가"}</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -287,7 +287,7 @@ export function Schedule() {
         </div>
       )}
 
-      <div className="bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden">
+      <div className="bg-white rounded-xl shadow-gh-sm border border-surface-200 overflow-hidden">
         {displaySchedules.length === 0 ? (
           <div className="p-8 text-center text-surface-500">
             해당 월에 등록된 점검 스케줄이 없습니다.
@@ -327,10 +327,10 @@ export function Schedule() {
                 <div className="flex gap-2 self-end sm:self-auto">
                   {deletingId === sched.id ? (
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-red-600 font-medium">정말 삭제할까요?</span>
+                      <span className="text-xs text-danger-600 font-medium">정말 삭제할까요?</span>
                       <button
                         onClick={() => handleDelete(sched.id)}
-                        className="px-3 py-1.5 text-white bg-red-600 rounded-md text-sm hover:bg-red-700 font-medium transition-colors"
+                        className="px-3 py-1.5 text-white bg-danger-600 rounded-md text-sm hover:bg-danger-700 font-medium transition-colors"
                       >
                         네, 삭제
                       </button>
@@ -351,7 +351,7 @@ export function Schedule() {
                       </button>
                       <button
                         onClick={() => setDeletingId(sched.id)}
-                        className="px-3 py-1.5 text-red-600 bg-white border border-surface-200 rounded-md text-sm hover:bg-red-50 font-medium transition-colors"
+                        className="px-3 py-1.5 text-danger-600 bg-white border border-surface-200 rounded-md text-sm hover:bg-danger-50 font-medium transition-colors"
                       >
                         삭제
                       </button>

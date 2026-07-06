@@ -202,7 +202,7 @@ export function Management() {
 
             <div className="border border-surface-200 rounded-lg overflow-hidden max-h-[60vh] overflow-y-auto overflow-x-auto">
               <table className="w-full text-sm text-left whitespace-nowrap relative">
-                <thead className="bg-surface-50 text-surface-500 border-b border-surface-200 uppercase text-xs font-semibold sticky top-0 z-10 shadow-sm">
+                <thead className="bg-surface-50 text-surface-500 border-b border-surface-200 uppercase text-xs font-semibold sticky top-0 z-10 shadow-gh-sm">
                   <tr>
                     <th className="px-4 py-3 w-28">부서 코드</th>
                     <th className="px-4 py-3 w-32">소속 건물</th>

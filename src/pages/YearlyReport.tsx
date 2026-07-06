@@ -240,43 +240,43 @@ export function YearlyReport() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-5 flex flex-col justify-center shadow-sm">
+        <div className="bg-success-50 border border-success-100 rounded-xl p-5 flex flex-col justify-center shadow-gh-sm">
           <div className="flex items-center justify-between mb-3">
              <div className="flex items-center gap-2">
                <span className="text-2xl">🏆</span>
-               <h3 className="font-bold text-emerald-900 text-lg">해당 기간 최우수 부서</h3>
+               <h3 className="font-bold text-success-800 text-lg">해당 기간 최우수 부서</h3>
              </div>
           </div>
           {extremumStats.highestDept ? (
             <div>
-              <div className="text-xl font-bold text-emerald-800">{extremumStats.highestDept.name}</div>
-              <div className="text-sm text-emerald-600 font-medium">평균 {extremumStats.highestScore}점</div>
+              <div className="text-xl font-bold text-success-700">{extremumStats.highestDept.name}</div>
+              <div className="text-sm text-success-600 font-medium">평균 {extremumStats.highestScore}점</div>
             </div>
           ) : (
-            <div className="text-sm text-emerald-600/70">데이터가 없습니다.</div>
+            <div className="text-sm text-success-600/70">데이터가 없습니다.</div>
           )}
         </div>
-        
-        <div className="bg-rose-50 border border-rose-100 rounded-xl p-5 flex flex-col justify-center shadow-sm">
+
+        <div className="bg-danger-50 border border-danger-100 rounded-xl p-5 flex flex-col justify-center shadow-gh-sm">
           <div className="flex items-center justify-between mb-3">
              <div className="flex items-center gap-2">
                <span className="text-2xl">📉</span>
-               <h3 className="font-bold text-rose-900 text-lg">해당 기간 개선 필요 부서</h3>
+               <h3 className="font-bold text-danger-800 text-lg">해당 기간 개선 필요 부서</h3>
              </div>
           </div>
           {extremumStats.lowestDept ? (
             <div>
-              <div className="text-xl font-bold text-rose-800">{extremumStats.lowestDept.name}</div>
-              <div className="text-sm text-rose-600 font-medium">평균 {extremumStats.lowestScore}점</div>
+              <div className="text-xl font-bold text-danger-700">{extremumStats.lowestDept.name}</div>
+              <div className="text-sm text-danger-600 font-medium">평균 {extremumStats.lowestScore}점</div>
             </div>
           ) : (
-            <div className="text-sm text-rose-600/70">데이터가 없습니다.</div>
+            <div className="text-sm text-danger-600/70">데이터가 없습니다.</div>
           )}
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="lg:col-span-2 shadow-sm border-surface-200">
+        <Card className="lg:col-span-2 shadow-gh-sm border-surface-200">
           <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between">
             <CardTitle>기간 내 점검일별 총점 추이</CardTitle>
             <select 
@@ -294,16 +294,16 @@ export function YearlyReport() {
             {periodData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={periodData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e3e9f0" />
                   <XAxis dataKey="shortDate" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} dy={10} />
                   <YAxis domain={[0, 20]} axisLine={false} tickLine={false} tick={{ fill: '#64748b' }} />
-                  <Tooltip 
-                    cursor={{stroke: '#e2e8f0', strokeWidth: 2}}
-                    contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                  <Tooltip
+                    cursor={{stroke: '#e3e9f0', strokeWidth: 2}}
+                    contentStyle={{ borderRadius: '12px', border: '1px solid #e3e9f0', boxShadow: '0 12px 32px rgba(15,48,83,.12), 0 2px 6px rgba(15,48,83,.06)' }}
                   />
                   <Legend iconType="circle" wrapperStyle={{ paddingTop: "20px" }} />
-                  <Line type="monotone" name="해당일 전체 평균" dataKey="allAverage" stroke="#94a3b8" strokeDasharray="5 5" strokeWidth={3} activeDot={{ r: 6 }} connectNulls />
-                  <Line type="monotone" name={`${selectedDeptInfo?.name || "-"} 점수`} dataKey="deptAverage" stroke="#4f46e5" strokeWidth={3} activeDot={{ r: 8, strokeWidth: 0, fill: '#4f46e5' }} connectNulls />
+                  <Line type="monotone" name="해당일 전체 평균" dataKey="allAverage" stroke="#a7b3c2" strokeDasharray="5 5" strokeWidth={3} activeDot={{ r: 6 }} connectNulls />
+                  <Line type="monotone" name={`${selectedDeptInfo?.name || "-"} 점수`} dataKey="deptAverage" stroke="#0f5daa" strokeWidth={3} activeDot={{ r: 8, strokeWidth: 0, fill: '#0f5daa' }} connectNulls />
                 </LineChart>
               </ResponsiveContainer>
             ) : (
@@ -312,7 +312,7 @@ export function YearlyReport() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm border-surface-200">
+        <Card className="shadow-gh-sm border-surface-200">
           <CardHeader>
             <CardTitle>{selectedDeptInfo?.name || "선택된 부서"} 세부 항목별 득점 추이</CardTitle>
           </CardHeader>
@@ -320,18 +320,18 @@ export function YearlyReport() {
             {periodData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={periodData} margin={{ top: 20, right: 30, left: -20, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e3e9f0" />
                   <XAxis dataKey="shortDate" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 10 }} dy={10} />
                   <YAxis domain={[0, 5]} axisLine={false} tickLine={false} tick={{ fill: '#64748b' }} />
-                  <Tooltip 
-                    cursor={{fill: '#f8fafc'}}
-                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  <Tooltip
+                    cursor={{fill: '#f6f8fb'}}
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(15,48,83,.08), 0 1px 3px rgba(15,48,83,.05)' }}
                   />
                   <Legend iconType="circle" wrapperStyle={{ fontSize: "12px", paddingTop: "10px" }} />
-                  <Bar dataKey="lights" name="소등" fill="#fbbf24" radius={[2, 2, 0, 0]} />
-                  <Bar dataKey="water" name="수압" fill="#38bdf8" radius={[2, 2, 0, 0]} />
-                  <Bar dataKey="recycle" name="분리수거" fill="#10b981" radius={[2, 2, 0, 0]} />
-                  <Bar dataKey="focus" name="중점점검" fill="#f43f5e" radius={[2, 2, 0, 0]} />
+                  <Bar dataKey="lights" name="소등" fill="#f78b1e" radius={[2, 2, 0, 0]} />
+                  <Bar dataKey="water" name="수압" fill="#2270b4" radius={[2, 2, 0, 0]} />
+                  <Bar dataKey="recycle" name="분리수거" fill="#1e9e5a" radius={[2, 2, 0, 0]} />
+                  <Bar dataKey="focus" name="중점점검" fill="#de4a47" radius={[2, 2, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
              ) : (

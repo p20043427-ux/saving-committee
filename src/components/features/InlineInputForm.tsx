@@ -139,7 +139,7 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
                     className="sr-only" 
                   />
                   <div className={`w-11 h-11 rounded-full flex items-center justify-center text-base font-semibold transition-all outline outline-1 group-hover:bg-primary-50 touch-manipulation
-                    ${scores[item.id] === score ? 'bg-primary-600 text-white outline-primary-600 shadow-sm' : 'text-surface-700 outline-surface-300'}`}>
+                    ${scores[item.id] === score ? 'bg-primary-600 text-white outline-primary-600 shadow-gh-sm' : 'text-surface-700 outline-surface-300'}`}>
                     {score}
                   </div>
                 </label>

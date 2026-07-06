@@ -505,7 +505,7 @@ export function DataManagement() {
             </div>
           )}
 
-          <div className="bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden">
+          <div className="bg-white rounded-xl shadow-gh-sm border border-surface-200 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm whitespace-nowrap">
                 <thead className="bg-surface-50 text-surface-600 border-b border-surface-200">
@@ -614,17 +614,17 @@ export function DataManagement() {
                           <td className="py-2 px-4 text-center">
                             {isEditing ? (
                               <span className={`px-2 py-1 text-xs font-semibold rounded-md ${
-                                editForm.status === '정상' ? 'bg-green-100 text-green-700' :
-                                editForm.status === '주의' ? 'bg-orange-100 text-orange-700' :
-                                'bg-red-100 text-red-700'
+                                editForm.status === '정상' ? 'bg-success-100 text-success-700' :
+                                editForm.status === '주의' ? 'bg-warning-100 text-warning-700' :
+                                'bg-danger-100 text-danger-700'
                               }`}>
                                 {editForm.status}
                               </span>
                             ) : (
                               <span className={`px-2 py-1 text-xs font-semibold rounded-md ${
-                                record.status === '정상' ? 'bg-green-100 text-green-700' :
-                                record.status === '주의' ? 'bg-orange-100 text-orange-700' :
-                                'bg-red-100 text-red-700'
+                                record.status === '정상' ? 'bg-success-100 text-success-700' :
+                                record.status === '주의' ? 'bg-warning-100 text-warning-700' :
+                                'bg-danger-100 text-danger-700'
                               }`}>
                                 {record.status}
                               </span>
@@ -653,7 +653,7 @@ export function DataManagement() {
                             ) : (
                               <div className="flex justify-end gap-2">
                                 <button onClick={() => startEdit(record)} className="px-2 py-1 text-primary-600 bg-primary-50 rounded text-xs hover:bg-primary-100">수정</button>
-                                <button onClick={() => deleteRecord(record.id)} className="px-2 py-1 text-red-600 bg-red-50 rounded text-xs hover:bg-red-100">삭제</button>
+                                <button onClick={() => deleteRecord(record.id)} className="px-2 py-1 text-danger-600 bg-danger-50 rounded text-xs hover:bg-danger-100">삭제</button>
                               </div>
                             )}
                           </td>
@@ -717,12 +717,12 @@ export function DataManagement() {
             </button>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden">
+          <div className="bg-white rounded-xl shadow-gh-sm border border-surface-200 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm whitespace-nowrap">
                 <thead className="bg-surface-50 text-surface-600 border-b border-surface-200">
                   <tr>
-                    <th className="py-3 px-4 font-semibold sticky left-0 bg-surface-50 z-10 w-48 shadow-[1px_0_0_0_#e5e7eb] cursor-pointer hover:bg-surface-100 select-none" onClick={() => handleAggSort('departmentName')}>
+                    <th className="py-3 px-4 font-semibold sticky left-0 bg-surface-50 z-10 w-48 shadow-[1px_0_0_0_var(--color-surface-200)] cursor-pointer hover:bg-surface-100 select-none" onClick={() => handleAggSort('departmentName')}>
                       부서명{renderAggSortIcon('departmentName')}
                     </th>
                     {[1,2,3,4,5,6,7,8,9,10,11,12].map(m => (
@@ -745,7 +745,7 @@ export function DataManagement() {
                   ) : (
                     aggregateData.map(row => (
                       <tr key={row.departmentId} className="hover:bg-surface-50">
-                        <td className="py-2 px-4 font-medium text-surface-900 sticky left-0 bg-white shadow-[1px_0_0_0_#e5e7eb]">
+                        <td className="py-2 px-4 font-medium text-surface-900 sticky left-0 bg-white shadow-[1px_0_0_0_var(--color-surface-200)]">
                           {row.departmentName}
                         </td>
                         {[1,2,3,4,5,6,7,8,9,10,11,12].map(m => {
@@ -754,7 +754,7 @@ export function DataManagement() {
                           return (
                             <td key={m} className="py-2 px-4 text-center border-l border-surface-50 font-mono">
                               {numVal !== null ? (
-                                <span className={numVal >= 18 ? "text-green-600 font-medium" : numVal < 15 ? "text-red-500 font-medium" : "text-surface-700"}>
+                                <span className={numVal >= 18 ? "text-success-600 font-medium" : numVal < 15 ? "text-danger-500 font-medium" : "text-surface-700"}>
                                   {numVal}
                                 </span>
                               ) : (

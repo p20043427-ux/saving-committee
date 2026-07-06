@@ -193,7 +193,7 @@ export function Events() {
           />
           <button
             onClick={() => setIsFormOpen(true)}
-            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium shadow-sm transition-colors whitespace-nowrap"
+            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium transition-colors whitespace-nowrap"
           >
             + 행사 기록
           </button>
@@ -201,7 +201,7 @@ export function Events() {
       </div>
 
       {isFormOpen && (
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-surface-200">
+        <div className="bg-white p-6 rounded-xl shadow-gh-sm border border-surface-200">
           <h2 className="text-lg font-bold mb-4">{editingId ? "행사 기록 수정" : "새 행사 기록"}</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -283,7 +283,7 @@ export function Events() {
         </div>
       )}
 
-      <div className="bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden">
+      <div className="bg-white rounded-xl shadow-gh-sm border border-surface-200 overflow-hidden">
         {displayEvents.length === 0 ? (
           <div className="p-8 text-center text-surface-500">
             해당 월에 등록된 행사/회의가 없습니다.
@@ -313,7 +313,7 @@ export function Events() {
                     <div className="flex flex-wrap gap-1.5">
                       {eventRecord.attendees && eventRecord.attendees.length > 0 ? (
                         eventRecord.attendees.map((att, i) => (
-                          <span key={i} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
+                          <span key={i} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-info-50 text-info-700 border border-info-100">
                             {att}
                           </span>
                         ))
@@ -327,10 +327,10 @@ export function Events() {
                 <div className="flex gap-2 self-start pt-1">
                   {deletingId === eventRecord.id ? (
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-red-600 font-medium whitespace-nowrap">삭제할까요?</span>
+                      <span className="text-xs text-danger-600 font-medium whitespace-nowrap">삭제할까요?</span>
                       <button
                         onClick={() => handleDelete(eventRecord.id)}
-                        className="px-3 py-1.5 text-white bg-red-600 rounded-md text-sm hover:bg-red-700 font-medium transition-colors whitespace-nowrap"
+                        className="px-3 py-1.5 text-white bg-danger-600 rounded-md text-sm hover:bg-danger-700 font-medium transition-colors whitespace-nowrap"
                       >
                         네
                       </button>
@@ -351,7 +351,7 @@ export function Events() {
                       </button>
                       <button
                         onClick={() => setDeletingId(eventRecord.id)}
-                        className="px-3 py-1.5 text-red-600 bg-white border border-surface-200 rounded-md text-sm hover:bg-red-50 font-medium transition-colors whitespace-nowrap"
+                        className="px-3 py-1.5 text-danger-600 bg-white border border-surface-200 rounded-md text-sm hover:bg-danger-50 font-medium transition-colors whitespace-nowrap"
                       >
                         삭제
                       </button>
@@ -365,7 +365,7 @@ export function Events() {
       </div>
 
       {displayEvents.length > 0 && (
-        <div className="bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden mt-8">
+        <div className="bg-white rounded-xl shadow-gh-sm border border-surface-200 overflow-hidden mt-8">
           <div className="bg-surface-50 px-6 py-4 border-b border-surface-200">
             <h2 className="text-lg font-bold text-surface-900">위원별 참여 현황 <span className="text-sm font-normal text-surface-500 ml-2">({filterMonth})</span></h2>
           </div>
@@ -373,7 +373,7 @@ export function Events() {
             <table className="w-full text-left text-sm whitespace-nowrap">
               <thead className="bg-surface-50/50 text-surface-600 border-b border-surface-200">
                 <tr>
-                  <th className="py-3 px-4 font-semibold sticky left-0 bg-surface-50 z-10 w-48 shadow-[1px_0_0_0_#e5e7eb]">위원명 (소속)</th>
+                  <th className="py-3 px-4 font-semibold sticky left-0 bg-surface-50 z-10 w-48 shadow-[1px_0_0_0_var(--color-surface-200)]">위원명 (소속)</th>
                   {displayEvents.map((evt) => (
                     <th key={evt.id} className="py-3 px-4 font-semibold text-center min-w-[100px]">
                       {evt.date.slice(5)}<br/>
@@ -388,7 +388,7 @@ export function Events() {
                   let attendCount = 0;
                   return (
                     <tr key={member.id} className="hover:bg-surface-50 transition-colors">
-                      <td className="py-2 px-4 font-medium text-surface-900 sticky left-0 bg-white z-10 shadow-[1px_0_0_0_#e5e7eb]">
+                      <td className="py-2 px-4 font-medium text-surface-900 sticky left-0 bg-white z-10 shadow-[1px_0_0_0_var(--color-surface-200)]">
                         {member.name} <span className="text-xs text-surface-500 font-normal">({member.department || '-'})</span>
                       </td>
                       {displayEvents.map(evt => {
@@ -397,7 +397,7 @@ export function Events() {
                         return (
                           <td key={evt.id} className="py-2 px-4 text-center">
                             {attended ? (
-                              <span className="inline-flex w-6 h-6 rounded-full bg-green-100 text-green-600 items-center justify-center font-bold text-xs mx-auto">
+                              <span className="inline-flex w-6 h-6 rounded-full bg-success-100 text-success-600 items-center justify-center font-bold text-xs mx-auto">
                                 O
                               </span>
                             ) : (

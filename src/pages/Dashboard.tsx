@@ -132,7 +132,7 @@ export function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card className="border-success-200 shadow-sm">
+          <Card className="border-success-200 shadow-gh-sm">
             <CardContent className="p-5 flex flex-col justify-between h-full">
               <div className="text-xs text-surface-500 font-medium uppercase tracking-wide">정상</div>
               <div className="text-3xl font-bold text-success-600 mt-2">{normalCount}</div>
@@ -140,7 +140,7 @@ export function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card className="border-warning-200 shadow-sm">
+          <Card className="border-warning-200 shadow-gh-sm">
             <CardContent className="p-5 flex flex-col justify-between h-full">
               <div className="text-xs text-surface-500 font-medium uppercase tracking-wide">주의</div>
               <div className="text-3xl font-bold text-warning-600 mt-2">{warningCount}</div>
@@ -148,7 +148,7 @@ export function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card className={`shadow-sm ${urgentCount > 0 ? "border-danger-300 bg-danger-50" : "border-surface-200"}`}>
+          <Card className={`shadow-gh-sm ${urgentCount > 0 ? "border-danger-300 bg-danger-50" : "border-surface-200"}`}>
             <CardContent className="p-5 flex flex-col justify-between h-full">
               <div className="text-xs text-surface-500 font-medium uppercase tracking-wide">긴급</div>
               <div className={`text-3xl font-bold mt-2 ${urgentCount > 0 ? "text-danger-600" : "text-surface-400"}`}>
@@ -162,7 +162,7 @@ export function Dashboard() {
         {/* Average score + building breakdown */}
         {inspectedCount > 0 && (
           <div className="grid grid-cols-5 gap-4">
-            <Card className="col-span-2 border-surface-200 shadow-sm">
+            <Card className="col-span-2 border-surface-200 shadow-gh-sm">
               <CardContent className="p-5">
                 <div className="text-xs text-surface-500 uppercase tracking-wide mb-2">오늘 평균 점수</div>
                 <div className="flex items-baseline gap-1">
@@ -178,7 +178,7 @@ export function Dashboard() {
               </CardContent>
             </Card>
 
-            <Card className="col-span-3 border-surface-200 shadow-sm">
+            <Card className="col-span-3 border-surface-200 shadow-gh-sm">
               <CardContent className="p-5">
                 <div className="text-xs text-surface-500 uppercase tracking-wide mb-3">건물별 점검 현황</div>
                 <div className="space-y-2">
@@ -211,7 +211,7 @@ export function Dashboard() {
 
         {/* Monthly KPI row */}
         <div className="grid grid-cols-3 gap-4">
-          <Card className="border-surface-200 shadow-sm">
+          <Card className="border-surface-200 shadow-gh-sm">
             <CardContent className="p-5">
               <div className="text-xs text-surface-500 uppercase tracking-wide mb-1">이번 달 점검 일수</div>
               <div className="flex items-baseline gap-1 mt-2">
@@ -220,7 +220,7 @@ export function Dashboard() {
               </div>
             </CardContent>
           </Card>
-          <Card className="border-surface-200 shadow-sm">
+          <Card className="border-surface-200 shadow-gh-sm">
             <CardContent className="p-5">
               <div className="text-xs text-surface-500 uppercase tracking-wide mb-1">이번 달 총 점검 건수</div>
               <div className="flex items-baseline gap-1 mt-2">
@@ -229,7 +229,7 @@ export function Dashboard() {
               </div>
             </CardContent>
           </Card>
-          <Card className="border-surface-200 shadow-sm">
+          <Card className="border-surface-200 shadow-gh-sm">
             <CardContent className="p-5">
               <div className="text-xs text-surface-500 uppercase tracking-wide mb-1">이번 달 평균 점수</div>
               <div className="flex items-baseline gap-1 mt-2">
@@ -241,7 +241,7 @@ export function Dashboard() {
         </div>
 
         {/* 최근 7일 BarChart */}
-        <Card className="border-surface-200 shadow-sm">
+        <Card className="border-surface-200 shadow-gh-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm">최근 7일 점검 현황</CardTitle>
           </CardHeader>
@@ -258,7 +258,7 @@ export function Dashboard() {
                   {dailyChartData.map((entry, index) => (
                     <Cell
                       key={index}
-                      fill={entry.date === today.slice(5) ? "#2aafa0" : "#93c5fd"}
+                      fill={entry.date === today.slice(5) ? "#45b3b4" : "#85b2e0"}
                     />
                   ))}
                 </Bar>
@@ -269,7 +269,7 @@ export function Dashboard() {
 
         {/* Events + Schedules */}
         <div className="grid grid-cols-2 gap-6">
-          <Card className="border-surface-200 shadow-sm">
+          <Card className="border-surface-200 shadow-gh-sm">
             <CardHeader className="pb-2">
               <CardTitle>이번 달 행사 일정</CardTitle>
             </CardHeader>
@@ -295,7 +295,7 @@ export function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card className="border-surface-200 shadow-sm">
+          <Card className="border-surface-200 shadow-gh-sm">
             <CardHeader className="pb-2">
               <CardTitle>이번 달 점검 스케줄</CardTitle>
             </CardHeader>

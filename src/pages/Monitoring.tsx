@@ -197,8 +197,8 @@ export function Monitoring() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "정상": return "bg-primary-50 border-primary-200 text-primary-700";
-      case "주의": return "bg-amber-50 border-amber-200 text-amber-700";
-      case "긴급": return "bg-red-50 border-red-200 text-red-700 animate-pulse";
+      case "주의": return "bg-warning-50 border-warning-200 text-warning-700";
+      case "긴급": return "bg-danger-50 border-danger-200 text-danger-700 animate-pulse";
       default: return "bg-surface-50 border-surface-200 text-surface-500 hover:bg-surface-100 cursor-pointer";
     }
   };
@@ -300,7 +300,7 @@ export function Monitoring() {
                 onClick={() => setMobileActiveBuildingId(b.id)}
                 className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                   mobileActiveBuildingId === b.id 
-                    ? 'bg-surface-900 text-white shadow-sm' 
+                    ? 'bg-surface-900 text-white shadow-gh-sm' 
                     : 'bg-white border border-surface-200 text-surface-600 hover:bg-surface-50'
                 }`}
               >
@@ -313,7 +313,7 @@ export function Monitoring() {
             {buildings.map(building => {
               const bDepts = departments.filter(d => d.buildingId === building.id);
               return (
-                <Card key={building.id} className={`flex-col h-full bg-surface-50/50 shadow-sm border-surface-200 ${mobileActiveBuildingId === building.id ? 'flex' : 'hidden lg:flex'}`}>
+                <Card key={building.id} className={`flex-col h-full bg-surface-50/50 shadow-gh-sm border-surface-200 ${mobileActiveBuildingId === building.id ? 'flex' : 'hidden lg:flex'}`}>
                 <CardHeader className="pb-3 border-b border-surface-100 bg-white rounded-t-xl">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-lg">{building.name}</CardTitle>
@@ -340,7 +340,7 @@ export function Monitoring() {
                             }}
                             className={`p-3 rounded-lg border transition-all flex items-center justify-between backdrop-blur-sm ${
                               status === "미점검"
-                                ? "border-surface-200 bg-white cursor-pointer hover:shadow-sm hover:border-primary-300"
+                                ? "border-surface-200 bg-white cursor-pointer hover:shadow-gh-sm hover:border-primary-300"
                                 : status === "정상"
                                 ? "border-success-200 bg-success-50/30"
                                 : status === "주의"

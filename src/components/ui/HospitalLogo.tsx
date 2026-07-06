@@ -21,11 +21,11 @@ export function HospitalLogo({
   const cy = s / 2 - b / 2;
 
   const blocks = [
-    { x: cx, y: cy - b - gap, color: "#1b3f8b", icon: "heart" },
-    { x: cx - b - gap, y: cy, color: "#1b3f8b", icon: "flower" },
-    { x: cx, y: cy, color: "#2aafa0", icon: "person" },
-    { x: cx + b + gap, y: cy, color: "#1b3f8b", icon: "cloud" },
-    { x: cx, y: cy + b + gap, color: "#1b3f8b", icon: "wave" },
+    { x: cx, y: cy - b - gap, color: "#113f6d", icon: "heart" },
+    { x: cx - b - gap, y: cy, color: "#113f6d", icon: "flower" },
+    { x: cx, y: cy, color: "#45b3b4", icon: "person" },
+    { x: cx + b + gap, y: cy, color: "#113f6d", icon: "cloud" },
+    { x: cx, y: cy + b + gap, color: "#113f6d", icon: "wave" },
   ];
 
   const iconScale = b / 32;

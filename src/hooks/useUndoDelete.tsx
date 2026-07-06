@@ -30,7 +30,7 @@ export function useUndoDelete() {
             <button
               onClick={() => handleUndo(t.id)}
               className="text-xs font-bold underline ml-2"
-              style={{ color: '#5eead4' }}
+              style={{ color: '#74cbcb' }}
             >
               되돌리기
             </button>
