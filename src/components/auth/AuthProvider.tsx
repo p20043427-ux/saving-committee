@@ -30,6 +30,16 @@ const AuthContext = createContext<AuthContextType>({
 
 export const useAuth = () => useContext(AuthContext);
 
+// 로그인 기능 임시 비활성화 — 다시 켜려면 false로 변경
+const AUTH_DISABLED = true;
+
+const BYPASS_USER: AppUser = {
+  uid: 'dev-bypass',
+  email: 'bypass@local',
+  name: '관리자',
+  role: 'admin',
+};
+
 function toAppUser(u: { id: string; email?: string | null; user_metadata?: Record<string, unknown> } | undefined): AppUser | null {
   if (!u) return null;
   const role = (u.user_metadata?.role as UserRole) ?? 'admin'; // 기존 계정은 admin 기본값
@@ -42,10 +52,12 @@ function toAppUser(u: { id: string; email?: string | null; user_metadata?: Recor
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<AppUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<AppUser | null>(AUTH_DISABLED ? BYPASS_USER : null);
+  const [loading, setLoading] = useState(!AUTH_DISABLED);
 
   useEffect(() => {
+    if (AUTH_DISABLED) return;
+
     supabase.auth.getSession().then(({ data }) => {
       setUser(toAppUser(data.session?.user));
       setLoading(false);
