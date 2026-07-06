@@ -307,6 +307,13 @@ export function DataManagement() {
     link.click();
   };
 
+  const scoreFields: { key: keyof RecordDoc['scores']; label: string }[] = [
+    { key: 'lights', label: '조명/전열' },
+    { key: 'water', label: '수돗물' },
+    { key: 'recycle', label: '재활용' },
+    { key: 'focus', label: '관심도' },
+  ];
+
   const renderRawSortIcon = (key: RawSortKey) => {
     if (rawSortConfig?.key !== key) return <span className="w-3 inline-block" />;
     return rawSortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3 inline ml-1 text-primary-500"/> : <ArrowDown className="w-3 h-3 inline ml-1 text-primary-500"/>;
@@ -505,7 +512,118 @@ export function DataManagement() {
             </div>
           )}
 
-          <div className="bg-white rounded-xl shadow-gh-sm border border-surface-200 overflow-hidden">
+          {/* 모바일: 카드 뷰 */}
+          <div className="sm:hidden space-y-3">
+            {filteredRecords.length === 0 ? (
+              <div className="text-center py-10 text-surface-500 text-sm bg-white rounded-xl border border-surface-200">
+                선택된 기간에 입력된 점검 데이터가 없습니다.
+              </div>
+            ) : (
+              pagedRecords.map(record => {
+                const isEditing = editingId === record.id;
+                return (
+                  <div
+                    key={record.id}
+                    className={`bg-white rounded-xl border p-4 shadow-gh-sm space-y-3 ${selectedIds.has(record.id) ? "border-primary-300 bg-primary-50" : "border-surface-200"}`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-start gap-2 min-w-0">
+                        <input
+                          type="checkbox"
+                          aria-label={`${record.departmentName} 선택`}
+                          checked={selectedIds.has(record.id)}
+                          onChange={(e) => {
+                            setSelectedIds(prev => {
+                              const next = new Set(prev);
+                              if (e.target.checked) next.add(record.id);
+                              else next.delete(record.id);
+                              return next;
+                            });
+                          }}
+                          className="rounded border-surface-300 mt-1 shrink-0"
+                        />
+                        <div className="min-w-0">
+                          <div className="text-xs text-surface-500">{record.date.split("T")[0]} · {getBuildingName(record.buildingId)}</div>
+                          <div className="font-semibold text-surface-900 truncate">{record.departmentName}</div>
+                        </div>
+                      </div>
+                      <span className={`shrink-0 px-2 py-1 text-xs font-semibold rounded-md ${
+                        (isEditing ? editForm.status : record.status) === '정상' ? 'bg-success-100 text-success-700' :
+                        (isEditing ? editForm.status : record.status) === '주의' ? 'bg-warning-100 text-warning-700' :
+                        'bg-danger-100 text-danger-700'
+                      }`}>
+                        {isEditing ? editForm.status : record.status}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-4 gap-2 text-center">
+                      {scoreFields.map(({ key, label }) => (
+                        <div key={key}>
+                          <div className="text-[10px] text-surface-500 mb-1">{label}</div>
+                          {isEditing ? (
+                            <input
+                              type="number" min="0" max="5"
+                              className="w-full px-1 py-1 text-center text-sm border border-surface-300 rounded"
+                              value={editForm.scores?.[key]}
+                              onChange={(e) => handleScoreChange(key, e.target.value)}
+                            />
+                          ) : (
+                            <div className="text-sm font-semibold text-surface-900">{record.scores?.[key] || 0}</div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="flex items-center justify-between text-sm border-t border-surface-100 pt-2">
+                      <span className="text-surface-500 flex items-center gap-1">
+                        점검자
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            className="w-24 px-2 py-1 text-sm border border-surface-300 rounded"
+                            value={editForm.inspector || ""}
+                            onChange={(e) => setEditForm({ ...editForm, inspector: e.target.value })}
+                          />
+                        ) : (
+                          <span className="font-medium text-surface-800">{record.inspector}</span>
+                        )}
+                      </span>
+                      <span className="font-bold text-surface-900">총점 {isEditing ? editForm.totalScore : record.totalScore}</span>
+                    </div>
+
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        className="w-full px-2 py-1.5 text-sm border border-surface-300 rounded"
+                        placeholder="특이사항"
+                        value={editForm.notes || ""}
+                        onChange={(e) => handleNotesChange(e.target.value)}
+                      />
+                    ) : record.notes ? (
+                      <div className="text-xs text-surface-600 bg-surface-50 rounded-md px-2 py-1.5">{record.notes}</div>
+                    ) : null}
+
+                    <div className="flex justify-end gap-2 pt-1">
+                      {isEditing ? (
+                        <>
+                          <button onClick={() => saveEdit(record.id)} className="px-3 py-1.5 bg-primary-600 text-white rounded-md text-xs font-semibold hover:bg-primary-700 min-h-[36px]">저장</button>
+                          <button onClick={cancelEdit} className="px-3 py-1.5 bg-surface-200 text-surface-700 rounded-md text-xs font-semibold hover:bg-surface-300 min-h-[36px]">취소</button>
+                        </>
+                      ) : (
+                        <>
+                          <button onClick={() => startEdit(record)} className="px-3 py-1.5 text-primary-600 bg-primary-50 rounded-md text-xs font-semibold hover:bg-primary-100 min-h-[36px]">수정</button>
+                          <button onClick={() => deleteRecord(record.id)} className="px-3 py-1.5 text-danger-600 bg-danger-50 rounded-md text-xs font-semibold hover:bg-danger-100 min-h-[36px]">삭제</button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          {/* 데스크탑: 테이블 뷰 */}
+          <div className="hidden sm:block bg-white rounded-xl shadow-gh-sm border border-surface-200 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm whitespace-nowrap">
                 <thead className="bg-surface-50 text-surface-600 border-b border-surface-200">
@@ -664,33 +782,34 @@ export function DataManagement() {
                 </tbody>
               </table>
             </div>
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between px-4 py-3 border-t border-surface-200">
-                <span className="text-xs text-surface-500">
-                  전체 {filteredRecords.length}건 중 {(page-1)*PAGE_SIZE+1}–{Math.min(page*PAGE_SIZE, filteredRecords.length)}건
-                </span>
-                <div className="flex gap-1">
-                  <button
-                    onClick={() => setPage(p => Math.max(1, p-1))}
-                    disabled={page === 1}
-                    className="px-3 py-2 text-sm border border-surface-300 rounded-md disabled:opacity-40 hover:bg-surface-50 min-h-[44px]"
-                  >이전</button>
-                  {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => i + 1).map(n => (
-                    <button
-                      key={n}
-                      onClick={() => setPage(n)}
-                      className={`px-3 py-2 text-sm rounded-md border min-h-[44px] ${n === page ? 'bg-primary-700 text-white border-primary-700' : 'border-surface-300 hover:bg-surface-50'}`}
-                    >{n}</button>
-                  ))}
-                  <button
-                    onClick={() => setPage(p => Math.min(totalPages, p+1))}
-                    disabled={page === totalPages}
-                    className="px-3 py-2 text-sm border border-surface-300 rounded-md disabled:opacity-40 hover:bg-surface-50 min-h-[44px]"
-                  >다음</button>
-                </div>
-              </div>
-            )}
           </div>
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-4 py-3 bg-white rounded-xl border border-surface-200">
+              <span className="text-xs text-surface-500">
+                전체 {filteredRecords.length}건 중 {(page-1)*PAGE_SIZE+1}–{Math.min(page*PAGE_SIZE, filteredRecords.length)}건
+              </span>
+              <div className="flex gap-1">
+                <button
+                  onClick={() => setPage(p => Math.max(1, p-1))}
+                  disabled={page === 1}
+                  className="px-3 py-2 text-sm border border-surface-300 rounded-md disabled:opacity-40 hover:bg-surface-50 min-h-[44px]"
+                >이전</button>
+                {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => i + 1).map(n => (
+                  <button
+                    key={n}
+                    onClick={() => setPage(n)}
+                    className={`px-3 py-2 text-sm rounded-md border min-h-[44px] ${n === page ? 'bg-primary-700 text-white border-primary-700' : 'border-surface-300 hover:bg-surface-50'}`}
+                  >{n}</button>
+                ))}
+                <button
+                  onClick={() => setPage(p => Math.min(totalPages, p+1))}
+                  disabled={page === totalPages}
+                  className="px-3 py-2 text-sm border border-surface-300 rounded-md disabled:opacity-40 hover:bg-surface-50 min-h-[44px]"
+                >다음</button>
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         <div className="space-y-4">
@@ -717,7 +836,46 @@ export function DataManagement() {
             </button>
           </div>
 
-          <div className="bg-white rounded-xl shadow-gh-sm border border-surface-200 overflow-hidden">
+          {/* 모바일: 카드 뷰 */}
+          <div className="sm:hidden space-y-3">
+            {aggregateData.length === 0 ? (
+              <div className="text-center py-10 text-surface-500 text-sm bg-white rounded-xl border border-surface-200">
+                {filterYear}년에 등록된 점검 데이터가 없습니다.
+              </div>
+            ) : (
+              aggregateData.map(row => (
+                <div key={row.departmentId} className="bg-white rounded-xl border border-surface-200 p-4 shadow-gh-sm">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="font-semibold text-surface-900">{row.departmentName}</div>
+                    <div className="text-sm font-bold text-surface-800 bg-surface-50 rounded-md px-2 py-1 font-mono">
+                      연간 {row.yearlyAvg !== null ? row.yearlyAvg : "-"}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-4 gap-2 text-center">
+                    {[1,2,3,4,5,6,7,8,9,10,11,12].map(m => {
+                      const val = row[`m${m}`];
+                      const numVal = val !== null ? Number(val) : null;
+                      return (
+                        <div key={m} className="bg-surface-50 rounded-md py-1.5">
+                          <div className="text-[10px] text-surface-500">{m}월</div>
+                          <div className={`text-sm font-mono font-medium ${
+                            numVal === null ? "text-surface-300" :
+                            numVal >= 18 ? "text-success-600" :
+                            numVal < 15 ? "text-danger-500" : "text-surface-700"
+                          }`}>
+                            {numVal !== null ? numVal : "-"}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* 데스크탑: 테이블 뷰 */}
+          <div className="hidden sm:block bg-white rounded-xl shadow-gh-sm border border-surface-200 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm whitespace-nowrap">
                 <thead className="bg-surface-50 text-surface-600 border-b border-surface-200">
