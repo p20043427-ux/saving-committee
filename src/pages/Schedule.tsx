@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "@/src/lib/supabase";
 import { liveQuery } from "@/src/lib/db";
 import { CommitteeMember } from "./Committee";
+import { PageHeader } from "../components/ui/PageHeader";
+import { Empty } from "../components/ui/Empty";
 import { toast } from "../components/ui/Toast";
 
 interface InspectionSchedule {
@@ -182,26 +184,26 @@ export function Schedule() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300 max-w-5xl mx-auto">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-surface-900 border-l-4 border-primary-500 pl-3">점검 스케줄</h1>
-          <p className="text-surface-500 text-sm mt-1">월별 점검 1차, 2차 스케줄과 배정 인원을 관리합니다.</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <input
-            type="month"
-            value={filterMonth}
-            onChange={(e) => setFilterMonth(e.target.value)}
-            className="rounded-lg border-surface-300 text-surface-900 font-semibold focus:ring-primary-500 focus:border-primary-500"
-          />
-          <button
-            onClick={() => setIsFormOpen(true)}
-            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium transition-colors whitespace-nowrap"
-          >
-            + 스케줄 추가
-          </button>
-        </div>
-      </div>
+      <PageHeader
+        title="점검 스케줄"
+        subtitle="월별 점검 1차, 2차 스케줄과 배정 인원을 관리합니다."
+        action={
+          <>
+            <input
+              type="month"
+              value={filterMonth}
+              onChange={(e) => setFilterMonth(e.target.value)}
+              className="rounded-lg border-surface-300 text-surface-900 font-semibold focus:ring-primary-500 focus:border-primary-500"
+            />
+            <button
+              onClick={() => setIsFormOpen(true)}
+              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium transition-colors whitespace-nowrap"
+            >
+              + 스케줄 추가
+            </button>
+          </>
+        }
+      />
 
       {isFormOpen && (
         <div className="bg-white p-6 rounded-xl shadow-gh-sm border border-surface-200">
@@ -289,9 +291,7 @@ export function Schedule() {
 
       <div className="bg-white rounded-xl shadow-gh-sm border border-surface-200 overflow-hidden">
         {displaySchedules.length === 0 ? (
-          <div className="p-8 text-center text-surface-500">
-            해당 월에 등록된 점검 스케줄이 없습니다.
-          </div>
+          <Empty message="해당 월에 등록된 점검 스케줄이 없습니다." />
         ) : (
           <div className="divide-y divide-surface-100">
             {displaySchedules.map(sched => (

@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/src/components/ui/Card";
+import { PageHeader } from "@/src/components/ui/PageHeader";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { supabase } from "@/src/lib/supabase";
 import { useAuth } from "@/src/components/auth/AuthProvider";
@@ -196,47 +197,48 @@ export function YearlyReport() {
   
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6 max-w-7xl mx-auto">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-surface-200 pb-4">
-        <div>
-          <h1 className="text-2xl font-bold text-surface-900 tracking-tight border-l-4 border-primary-500 pl-3">부서별 기간 리포트</h1>
-          <p className="text-surface-500 mt-1">지정된 기간 내의 점검 데이터와 병원 전체 평균을 비교합니다.</p>
-        </div>
-        
-        <div className="flex flex-wrap items-center gap-2 bg-surface-50 p-2 rounded-lg border border-surface-200">
-          <select
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value as "month" | "range")}
-            className="bg-white border border-surface-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
-          >
-            <option value="month">월별 조회</option>
-            <option value="range">기간 조회</option>
-          </select>
+      <div className="border-b border-surface-200 pb-4">
+        <PageHeader
+          title="부서별 기간 리포트"
+          subtitle="지정된 기간 내의 점검 데이터와 병원 전체 평균을 비교합니다."
+          action={
+            <div className="flex flex-wrap items-center gap-2 bg-surface-50 p-2 rounded-lg border border-surface-200">
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value as "month" | "range")}
+                className="bg-white border border-surface-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
+              >
+                <option value="month">월별 조회</option>
+                <option value="range">기간 조회</option>
+              </select>
 
-          {filterType === "month" ? (
-            <input
-              type="month"
-              value={filterMonth}
-              onChange={(e) => setFilterMonth(e.target.value)}
-              className="bg-white border border-surface-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
-            />
-          ) : (
-            <div className="flex items-center gap-1">
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="bg-white border border-surface-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 w-32"
-              />
-              <span className="text-surface-400">~</span>
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="bg-white border border-surface-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 w-32"
-              />
+              {filterType === "month" ? (
+                <input
+                  type="month"
+                  value={filterMonth}
+                  onChange={(e) => setFilterMonth(e.target.value)}
+                  className="bg-white border border-surface-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
+                />
+              ) : (
+                <div className="flex items-center gap-1">
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="bg-white border border-surface-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 w-32"
+                  />
+                  <span className="text-surface-400">~</span>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="bg-white border border-surface-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 w-32"
+                  />
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          }
+        />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

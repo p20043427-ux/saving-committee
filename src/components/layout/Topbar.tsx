@@ -3,6 +3,8 @@ import { useLocation, useNavigate } from "react-router";
 import { useAuth } from "@/src/components/auth/AuthProvider";
 import { usePermission } from "@/src/hooks/usePermission";
 import { HospitalLogo } from "@/src/components/ui/HospitalLogo";
+import { IconButton } from "@/src/components/ui/IconButton";
+import { Tooltip } from "@/src/components/ui/Tooltip";
 
 interface TopbarProps {
   onToggleMenu?: () => void;
@@ -46,14 +48,14 @@ export function Topbar({ onToggleMenu, onSearchClick }: TopbarProps) {
   return (
     <header className="no-print flex justify-between items-center shrink-0 bg-white border-b border-surface-200 px-6 h-14">
       <div className="flex items-center gap-3">
-        <button
+        <IconButton
           onClick={onToggleMenu}
           aria-label="메뉴 열기"
           aria-expanded={false}
-          className="md:hidden p-1.5 text-surface-500 hover:bg-surface-100 rounded transition-colors"
+          className="md:hidden"
         >
           <Menu className="w-5 h-5" aria-hidden="true" />
-        </button>
+        </IconButton>
 
         {/* Breadcrumb */}
         <nav aria-label="현재 위치" className="flex items-center gap-2 text-sm">
@@ -100,22 +102,23 @@ export function Topbar({ onToggleMenu, onSearchClick }: TopbarProps) {
           {roleLabel}
         </span>
 
-        <div
-          className="w-7 h-7 rounded-full bg-primary-700 flex items-center justify-center text-white text-xs font-bold cursor-default"
-          aria-label={`사용자: ${user?.name ?? user?.email ?? "관리자"}`}
-          title={user?.email ?? ""}
-        >
-          {initials}
-        </div>
+        <Tooltip content={user?.email || user?.name || "관리자"}>
+          <div
+            className="w-7 h-7 rounded-full bg-primary-700 flex items-center justify-center text-white text-xs font-bold cursor-default"
+            aria-label={`사용자: ${user?.name ?? user?.email ?? "관리자"}`}
+          >
+            {initials}
+          </div>
+        </Tooltip>
 
-        <button
+        <IconButton
           onClick={handleLogout}
           aria-label="로그아웃"
-          className="p-1.5 text-surface-400 hover:text-danger-600 hover:bg-danger-50 rounded transition-colors"
+          variant="danger"
           title="로그아웃"
         >
           <LogOut className="w-4 h-4" aria-hidden="true" />
-        </button>
+        </IconButton>
       </div>
     </header>
   );

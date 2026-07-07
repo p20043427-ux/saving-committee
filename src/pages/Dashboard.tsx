@@ -2,6 +2,7 @@ import { Link } from "react-router";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/Card";
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
 import { SkeletonCard } from "@/src/components/ui/Skeleton";
+import { Empty } from "@/src/components/ui/Empty";
 import { ClipboardList, Database, Calendar, Users, PartyPopper, Building2, BarChart3, Settings } from "lucide-react";
 import { useDashboardData } from "@/src/hooks/useDashboardData";
 import {
@@ -276,7 +277,7 @@ export function Dashboard() {
             <CardContent>
               <div className="space-y-3 pt-1">
                 {events.length === 0 && (
-                  <div className="text-sm text-surface-400 py-6 text-center">이번 달 등록된 행사가 없습니다.</div>
+                  <Empty message="이번 달 등록된 행사가 없습니다." className="py-6" />
                 )}
                 {events.map((e) => (
                   <div key={e.id} className="flex items-start gap-3 p-2 rounded-lg hover:bg-surface-50 transition-colors">
@@ -302,7 +303,7 @@ export function Dashboard() {
             <CardContent>
               <div className="space-y-3 pt-1">
                 {schedules.length === 0 && (
-                  <div className="text-sm text-surface-400 py-6 text-center">이번 달 등록된 스케줄이 없습니다.</div>
+                  <Empty message="이번 달 등록된 스케줄이 없습니다." className="py-6" />
                 )}
                 {schedules.map((s) => (
                   <div key={s.id} className="flex items-start gap-3 p-2 rounded-lg hover:bg-surface-50 transition-colors">

@@ -8,6 +8,7 @@ import { InlineInputForm } from "@/src/components/features/InlineInputForm";
 import { DatePickerWithData } from "@/src/components/features/DatePickerWithData";
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
 import { toast } from "../components/ui/Toast";
+import { PageHeader } from "../components/ui/PageHeader";
 import { Printer } from "lucide-react";
 
 interface RecordData {
@@ -218,45 +219,45 @@ export function Monitoring() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-surface-900 tracking-tight">일자별 점검 현황</h1>
-          <p className="text-surface-500 mt-1">이전 기록 조회 및 해당 일자 점검표를 개별 입력합니다.</p>
-        </div>
-        <div className="flex items-center space-x-2 w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0 scrollbar-hide -mx-2 px-2 sm:mx-0 sm:px-0 no-print">
-           <button
-             type="button"
-             onClick={() => window.print()}
-             className="flex-shrink-0 px-3 py-2 bg-surface-100 border border-surface-300 text-surface-700 font-medium rounded-lg text-sm hover:bg-surface-200 transition-colors focus:ring-2 focus:ring-primary-500 outline-none flex items-center gap-1.5"
-           >
-             <Printer size={14} />
-             <span className="hidden sm:inline">인쇄</span>
-           </button>
-           <button
-             type="button"
-             onClick={exportToCSV}
-             disabled={isExporting}
-             className="flex-shrink-0 px-4 py-2 bg-surface-100 border border-surface-300 text-surface-700 font-medium rounded-lg text-sm hover:bg-surface-200 transition-colors focus:ring-2 focus:ring-primary-500 outline-none flex items-center space-x-1"
-           >
-             <span>⬇️</span>
-             <span>{isExporting ? "추출 중..." : "CSV 내보내기"}</span>
-           </button>
-           <select
-             className="flex-shrink-0 w-32 sm:w-auto px-4 py-2 border border-surface-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-primary-500 outline-none text-surface-700 font-medium whitespace-nowrap"
-             value={globalInspector}
-             onChange={(e) => setGlobalInspector(e.target.value)}
-           >
-             <option value="">점검자 성명 (선택)</option>
-             {members.map(m => (
-               <option key={m.id} value={m.name}>{m.name}</option>
-             ))}
-           </select>
-           <DatePickerWithData 
-             selectedDate={selectedDate}
-             onDateChange={setSelectedDate}
-           />
-        </div>
-      </div>
+      <PageHeader
+        title="일자별 점검 현황"
+        subtitle="이전 기록 조회 및 해당 일자 점검표를 개별 입력합니다."
+        action={
+          <div className="flex items-center space-x-2 w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0 scrollbar-hide -mx-2 px-2 sm:mx-0 sm:px-0 no-print">
+             <button
+               type="button"
+               onClick={() => window.print()}
+               className="flex-shrink-0 px-3 py-2 bg-surface-100 border border-surface-300 text-surface-700 font-medium rounded-lg text-sm hover:bg-surface-200 transition-colors focus:ring-2 focus:ring-primary-500 outline-none flex items-center gap-1.5"
+             >
+               <Printer size={14} />
+               <span className="hidden sm:inline">인쇄</span>
+             </button>
+             <button
+               type="button"
+               onClick={exportToCSV}
+               disabled={isExporting}
+               className="flex-shrink-0 px-4 py-2 bg-surface-100 border border-surface-300 text-surface-700 font-medium rounded-lg text-sm hover:bg-surface-200 transition-colors focus:ring-2 focus:ring-primary-500 outline-none flex items-center space-x-1"
+             >
+               <span>⬇️</span>
+               <span>{isExporting ? "추출 중..." : "CSV 내보내기"}</span>
+             </button>
+             <select
+               className="flex-shrink-0 w-32 sm:w-auto px-4 py-2 border border-surface-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-primary-500 outline-none text-surface-700 font-medium whitespace-nowrap"
+               value={globalInspector}
+               onChange={(e) => setGlobalInspector(e.target.value)}
+             >
+               <option value="">점검자 성명 (선택)</option>
+               {members.map(m => (
+                 <option key={m.id} value={m.name}>{m.name}</option>
+               ))}
+             </select>
+             <DatePickerWithData
+               selectedDate={selectedDate}
+               onDateChange={setSelectedDate}
+             />
+          </div>
+        }
+      />
 
       {isLoading || orgLoading ? (
         <div className="flex justify-center p-12 text-surface-400">데이터를 불러오는 중입니다...</div>

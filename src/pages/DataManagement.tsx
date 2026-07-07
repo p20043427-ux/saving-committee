@@ -7,6 +7,12 @@ import { Download, CalendarDays, BarChart2, ArrowUp, ArrowDown } from "lucide-re
 import { toast } from "../components/ui/Toast";
 import { useConfirm } from "../hooks/useConfirm";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
+import { PageHeader } from "../components/ui/PageHeader";
+import { Tabs } from "../components/ui/Tabs";
+import { TableCard } from "../components/ui/TableCard";
+import { Checkbox } from "../components/ui/Checkbox";
+import { Tooltip } from "../components/ui/Tooltip";
+import { Empty } from "../components/ui/Empty";
 
 export interface RecordDoc {
   id: string;
@@ -404,36 +410,17 @@ export function DataManagement() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-surface-900 border-l-4 border-primary-500 pl-3">점검 데이터 관리</h1>
-          <p className="text-surface-500 text-sm mt-1">상세 점검 내역을 관리하고 연간/월별 점수표를 확인하세요.</p>
-        </div>
-      </div>
+      <PageHeader title="점검 데이터 관리" subtitle="상세 점검 내역을 관리하고 연간/월별 점수표를 확인하세요." />
 
       {/* Tabs */}
-      <div className="flex space-x-1 border-b border-surface-200">
-        <button
-          onClick={() => setActiveTab("raw")}
-          className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors min-h-[44px] ${
-            activeTab === "raw" ? "border-primary-500 text-primary-600" : "border-transparent text-surface-500 hover:text-surface-700 hover:border-surface-300"
-          }`}
-        >
-          <CalendarDays className="w-4 h-4" />
-          <span className="hidden sm:inline">상세 점검 내역</span>
-          <span className="sm:hidden">상세</span>
-        </button>
-        <button
-          onClick={() => setActiveTab("aggregate")}
-          className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors min-h-[44px] ${
-            activeTab === "aggregate" ? "border-primary-500 text-primary-600" : "border-transparent text-surface-500 hover:text-surface-700 hover:border-surface-300"
-          }`}
-        >
-          <BarChart2 className="w-4 h-4" />
-          <span className="hidden sm:inline">부서별 월간/연간 점수표</span>
-          <span className="sm:hidden">집계</span>
-        </button>
-      </div>
+      <Tabs
+        items={[
+          { key: "raw", label: "상세 점검 내역", shortLabel: "상세", icon: <CalendarDays className="w-4 h-4" /> },
+          { key: "aggregate", label: "부서별 월간/연간 점수표", shortLabel: "집계", icon: <BarChart2 className="w-4 h-4" /> },
+        ]}
+        active={activeTab}
+        onChange={(key) => setActiveTab(key as "raw" | "aggregate")}
+      />
 
       {activeTab === "raw" ? (
         <div className="space-y-4">
@@ -515,9 +502,7 @@ export function DataManagement() {
           {/* 모바일: 카드 뷰 */}
           <div className="sm:hidden space-y-3">
             {filteredRecords.length === 0 ? (
-              <div className="text-center py-10 text-surface-500 text-sm bg-white rounded-xl border border-surface-200">
-                선택된 기간에 입력된 점검 데이터가 없습니다.
-              </div>
+              <Empty message="선택된 기간에 입력된 점검 데이터가 없습니다." className="bg-white rounded-xl border border-surface-200" />
             ) : (
               pagedRecords.map(record => {
                 const isEditing = editingId === record.id;
@@ -528,8 +513,7 @@ export function DataManagement() {
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-start gap-2 min-w-0">
-                        <input
-                          type="checkbox"
+                        <Checkbox
                           aria-label={`${record.departmentName} 선택`}
                           checked={selectedIds.has(record.id)}
                           onChange={(e) => {
@@ -540,7 +524,7 @@ export function DataManagement() {
                               return next;
                             });
                           }}
-                          className="rounded border-surface-300 mt-1 shrink-0"
+                          className="mt-1 shrink-0"
                         />
                         <div className="min-w-0">
                           <div className="text-xs text-surface-500">{record.date.split("T")[0]} · {getBuildingName(record.buildingId)}</div>
@@ -623,14 +607,12 @@ export function DataManagement() {
           </div>
 
           {/* 데스크탑: 테이블 뷰 */}
-          <div className="hidden sm:block bg-white rounded-xl shadow-gh-sm border border-surface-200 overflow-hidden">
-            <div className="overflow-x-auto">
+          <TableCard className="hidden sm:block">
               <table className="w-full text-left text-sm whitespace-nowrap">
                 <thead className="bg-surface-50 text-surface-600 border-b border-surface-200">
                   <tr>
                     <th className="py-3 px-4 w-10">
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         aria-label="전체 선택"
                         checked={pagedRecords.length > 0 && pagedRecords.every(r => selectedIds.has(r.id))}
                         onChange={(e) => {
@@ -644,7 +626,6 @@ export function DataManagement() {
                             });
                           }
                         }}
-                        className="rounded border-surface-300"
                       />
                     </th>
                     <th className="py-3 px-4 font-semibold cursor-pointer hover:bg-surface-100 select-none whitespace-nowrap" onClick={() => handleRawSort('date')}>점검일{renderRawSortIcon('date')}</th>
@@ -664,8 +645,8 @@ export function DataManagement() {
                 <tbody className="divide-y divide-surface-100">
                   {filteredRecords.length === 0 ? (
                     <tr>
-                      <td colSpan={13} className="py-8 text-center text-surface-500">
-                        선택된 기간에 입력된 점검 데이터가 없습니다.
+                      <td colSpan={13}>
+                        <Empty message="선택된 기간에 입력된 점검 데이터가 없습니다." />
                       </td>
                     </tr>
                   ) : (
@@ -674,8 +655,7 @@ export function DataManagement() {
                       return (
                         <tr key={record.id} className={`hover:bg-surface-50 group ${selectedIds.has(record.id) ? "bg-primary-50" : ""}`}>
                           <td className="py-2 px-4 w-10">
-                            <input
-                              type="checkbox"
+                            <Checkbox
                               aria-label={`${record.departmentName} 선택`}
                               checked={selectedIds.has(record.id)}
                               onChange={(e) => {
@@ -686,7 +666,6 @@ export function DataManagement() {
                                   return next;
                                 });
                               }}
-                              className="rounded border-surface-300"
                             />
                           </td>
                           <td className="py-2 px-4 text-surface-600">{record.date.split("T")[0]}</td>
@@ -756,10 +735,12 @@ export function DataManagement() {
                                 value={editForm.notes || ""} 
                                 onChange={(e) => handleNotesChange(e.target.value)}
                               />
+                            ) : record.notes ? (
+                              <Tooltip content={record.notes}>
+                                <span className="truncate max-w-[200px] block">{record.notes}</span>
+                              </Tooltip>
                             ) : (
-                              <span className="truncate max-w-[200px] block" title={record.notes}>
-                                {record.notes}
-                              </span>
+                              <span className="truncate max-w-[200px] block">{record.notes}</span>
                             )}
                           </td>
                           <td className="py-2 px-4 text-right">
@@ -781,8 +762,7 @@ export function DataManagement() {
                   )}
                 </tbody>
               </table>
-            </div>
-          </div>
+          </TableCard>
 
           {totalPages > 1 && (
             <div className="flex items-center justify-between px-4 py-3 bg-white rounded-xl border border-surface-200">
@@ -839,9 +819,7 @@ export function DataManagement() {
           {/* 모바일: 카드 뷰 */}
           <div className="sm:hidden space-y-3">
             {aggregateData.length === 0 ? (
-              <div className="text-center py-10 text-surface-500 text-sm bg-white rounded-xl border border-surface-200">
-                {filterYear}년에 등록된 점검 데이터가 없습니다.
-              </div>
+              <Empty message={`${filterYear}년에 등록된 점검 데이터가 없습니다.`} className="bg-white rounded-xl border border-surface-200" />
             ) : (
               aggregateData.map(row => (
                 <div key={row.departmentId} className="bg-white rounded-xl border border-surface-200 p-4 shadow-gh-sm">
@@ -875,8 +853,7 @@ export function DataManagement() {
           </div>
 
           {/* 데스크탑: 테이블 뷰 */}
-          <div className="hidden sm:block bg-white rounded-xl shadow-gh-sm border border-surface-200 overflow-hidden">
-            <div className="overflow-x-auto">
+          <TableCard className="hidden sm:block">
               <table className="w-full text-left text-sm whitespace-nowrap">
                 <thead className="bg-surface-50 text-surface-600 border-b border-surface-200">
                   <tr>
@@ -896,8 +873,8 @@ export function DataManagement() {
                 <tbody className="divide-y divide-surface-100">
                   {aggregateData.length === 0 ? (
                     <tr>
-                      <td colSpan={14} className="py-8 text-center text-surface-500">
-                        {filterYear}년에 등록된 점검 데이터가 없습니다.
+                      <td colSpan={14}>
+                        <Empty message={`${filterYear}년에 등록된 점검 데이터가 없습니다.`} />
                       </td>
                     </tr>
                   ) : (
@@ -929,8 +906,7 @@ export function DataManagement() {
                   )}
                 </tbody>
               </table>
-            </div>
-          </div>
+          </TableCard>
         </div>
       )}
       <ConfirmDialog {...dialogProps} />

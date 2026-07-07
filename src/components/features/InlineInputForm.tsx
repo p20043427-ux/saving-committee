@@ -6,6 +6,7 @@ import { useAuth } from "@/src/components/auth/AuthProvider";
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
 import { Button } from "@/src/components/ui/Button";
 import { Select, Textarea } from "@/src/components/ui/Input";
+import { Alert } from "@/src/components/ui/Alert";
 import { toast } from "@/src/components/ui/Toast";
 import { useAuditLog } from "@/src/hooks/useAuditLog";
 
@@ -108,9 +109,7 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
       <div className="text-sm font-bold text-surface-900 border-b border-surface-200 pb-2">점검표 입력 ({inspectionDate})</div>
       
       {errorMessage && (
-        <div role="alert" className="p-3 my-2 text-sm text-danger-600 bg-danger-50 border border-danger-200 rounded-md">
-          {errorMessage}
-        </div>
+        <Alert variant="error" className="my-2">{errorMessage}</Alert>
       )}
 
       <div className="space-y-2 text-sm">
@@ -160,9 +159,9 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
       </div>
 
       {successMsg && (
-        <div role="status" className="p-3 text-sm text-success-700 bg-success-50 border border-success-200 rounded-md flex items-center gap-2">
+        <Alert variant="success" className="flex items-center gap-2">
           <span aria-hidden="true">✓</span> {successMsg}
-        </div>
+        </Alert>
       )}
 
       <div className="flex justify-end space-x-2 pt-2">

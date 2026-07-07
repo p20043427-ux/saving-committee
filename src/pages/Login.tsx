@@ -4,6 +4,7 @@ import { useAuth } from "@/src/components/auth/AuthProvider";
 import { Input } from "@/src/components/ui/Input";
 import { Button } from "@/src/components/ui/Button";
 import { HospitalLogo } from "@/src/components/ui/HospitalLogo";
+import { Alert } from "@/src/components/ui/Alert";
 
 export function Login() {
   const { signIn } = useAuth();
@@ -82,9 +83,7 @@ export function Login() {
           <p className="text-surface-500 text-sm mb-8">계정 정보를 입력하세요</p>
 
           {error && (
-            <div role="alert" className="mb-4 p-3 text-sm text-danger-600 bg-danger-50 border border-danger-200 rounded-lg">
-              {error}
-            </div>
+            <Alert variant="error" className="mb-4">{error}</Alert>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">

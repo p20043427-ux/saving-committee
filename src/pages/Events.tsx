@@ -2,6 +2,10 @@ import React, { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/src/lib/supabase";
 import { liveQuery } from "@/src/lib/db";
 import { CommitteeMember } from "./Committee";
+import { PageHeader } from "../components/ui/PageHeader";
+import { Tabs } from "../components/ui/Tabs";
+import { TableCard } from "../components/ui/TableCard";
+import { Empty } from "../components/ui/Empty";
 import { toast } from "../components/ui/Toast";
 
 interface CommitteeEvent {
@@ -201,59 +205,49 @@ export function Events() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300 max-w-5xl mx-auto">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-surface-900 border-l-4 border-primary-500 pl-3">월별 행사 관리</h1>
-          <p className="text-surface-500 text-sm mt-1">위원회 단위의 행사, 회의 내역 및 참석자를 기록합니다.</p>
-        </div>
-        <div className="flex items-center gap-4">
-          {activeTab === "monthly" ? (
-            <input
-              type="month"
-              value={filterMonth}
-              onChange={(e) => setFilterMonth(e.target.value)}
-              className="rounded-lg border-surface-300 text-surface-900 font-semibold focus:ring-primary-500 focus:border-primary-500"
-            />
-          ) : (
-            <select
-              value={filterYear}
-              onChange={(e) => setFilterYear(e.target.value)}
-              className="rounded-lg border-surface-300 text-surface-900 font-semibold focus:ring-primary-500 focus:border-primary-500"
+      <PageHeader
+        title="월별 행사 관리"
+        subtitle="위원회 단위의 행사, 회의 내역 및 참석자를 기록합니다."
+        action={
+          <>
+            {activeTab === "monthly" ? (
+              <input
+                type="month"
+                value={filterMonth}
+                onChange={(e) => setFilterMonth(e.target.value)}
+                className="rounded-lg border-surface-300 text-surface-900 font-semibold focus:ring-primary-500 focus:border-primary-500"
+              />
+            ) : (
+              <select
+                value={filterYear}
+                onChange={(e) => setFilterYear(e.target.value)}
+                className="rounded-lg border-surface-300 text-surface-900 font-semibold focus:ring-primary-500 focus:border-primary-500"
+              >
+                {Array.from({ length: 5 }).map((_, i) => {
+                  const y = (new Date().getFullYear() - 2 + i).toString();
+                  return <option key={y} value={y}>{y}년</option>;
+                })}
+              </select>
+            )}
+            <button
+              onClick={() => setIsFormOpen(true)}
+              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium transition-colors whitespace-nowrap"
             >
-              {Array.from({ length: 5 }).map((_, i) => {
-                const y = (new Date().getFullYear() - 2 + i).toString();
-                return <option key={y} value={y}>{y}년</option>;
-              })}
-            </select>
-          )}
-          <button
-            onClick={() => setIsFormOpen(true)}
-            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium transition-colors whitespace-nowrap"
-          >
-            + 행사 기록
-          </button>
-        </div>
-      </div>
+              + 행사 기록
+            </button>
+          </>
+        }
+      />
 
       {/* Tabs */}
-      <div className="flex space-x-1 border-b border-surface-200">
-        <button
-          onClick={() => setActiveTab("monthly")}
-          className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors min-h-[44px] ${
-            activeTab === "monthly" ? "border-primary-500 text-primary-600" : "border-transparent text-surface-500 hover:text-surface-700 hover:border-surface-300"
-          }`}
-        >
-          월별 상세
-        </button>
-        <button
-          onClick={() => setActiveTab("yearly")}
-          className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors min-h-[44px] ${
-            activeTab === "yearly" ? "border-primary-500 text-primary-600" : "border-transparent text-surface-500 hover:text-surface-700 hover:border-surface-300"
-          }`}
-        >
-          연간 참여 현황
-        </button>
-      </div>
+      <Tabs
+        items={[
+          { key: "monthly", label: "월별 상세" },
+          { key: "yearly", label: "연간 참여 현황" },
+        ]}
+        active={activeTab}
+        onChange={(key) => setActiveTab(key as "monthly" | "yearly")}
+      />
 
       {isFormOpen && (
         <div className="bg-white p-6 rounded-xl shadow-gh-sm border border-surface-200">
@@ -342,9 +336,7 @@ export function Events() {
       <>
       <div className="bg-white rounded-xl shadow-gh-sm border border-surface-200 overflow-hidden">
         {displayEvents.length === 0 ? (
-          <div className="p-8 text-center text-surface-500">
-            해당 월에 등록된 행사/회의가 없습니다.
-          </div>
+          <Empty message="해당 월에 등록된 행사/회의가 없습니다." />
         ) : (
           <div className="divide-y divide-surface-100">
             {displayEvents.map(eventRecord => (
@@ -422,11 +414,10 @@ export function Events() {
       </div>
 
       {displayEvents.length > 0 && (
-        <div className="bg-white rounded-xl shadow-gh-sm border border-surface-200 overflow-hidden mt-8">
-          <div className="bg-surface-50 px-6 py-4 border-b border-surface-200">
-            <h2 className="text-lg font-bold text-surface-900">위원별 참여 현황 <span className="text-sm font-normal text-surface-500 ml-2">({filterMonth})</span></h2>
-          </div>
-          <div className="overflow-x-auto">
+        <TableCard
+          className="mt-8"
+          header={<h2 className="text-lg font-bold text-surface-900">위원별 참여 현황 <span className="text-sm font-normal text-surface-500 ml-2">({filterMonth})</span></h2>}
+        >
             <table className="w-full text-left text-sm whitespace-nowrap">
               <thead className="bg-surface-50/50 text-surface-600 border-b border-surface-200">
                 <tr>
@@ -471,23 +462,20 @@ export function Events() {
                 })}
                 {members.length === 0 && (
                   <tr>
-                    <td colSpan={displayEvents.length + 2} className="py-8 text-center text-surface-500">등록된 위원이 없습니다.</td>
+                    <td colSpan={displayEvents.length + 2}><Empty message="등록된 위원이 없습니다." /></td>
                   </tr>
                 )}
               </tbody>
             </table>
-          </div>
-        </div>
+        </TableCard>
       )}
       </>
       )}
 
       {activeTab === "yearly" && (
-        <div className="bg-white rounded-xl shadow-gh-sm border border-surface-200 overflow-hidden">
-          <div className="bg-surface-50 px-6 py-4 border-b border-surface-200">
-            <h2 className="text-lg font-bold text-surface-900">위원별 연간 참여 현황 <span className="text-sm font-normal text-surface-500 ml-2">({filterYear}년)</span></h2>
-          </div>
-          <div className="overflow-x-auto">
+        <TableCard
+          header={<h2 className="text-lg font-bold text-surface-900">위원별 연간 참여 현황 <span className="text-sm font-normal text-surface-500 ml-2">({filterYear}년)</span></h2>}
+        >
             <table className="w-full text-left text-sm whitespace-nowrap">
               <thead className="bg-surface-50/50 text-surface-600 border-b border-surface-200">
                 <tr>
@@ -501,7 +489,7 @@ export function Events() {
               <tbody className="divide-y divide-surface-100">
                 {yearlyAttendance.length === 0 ? (
                   <tr>
-                    <td colSpan={14} className="py-8 text-center text-surface-500">등록된 위원이 없습니다.</td>
+                    <td colSpan={14}><Empty message="등록된 위원이 없습니다." /></td>
                   </tr>
                 ) : (
                   yearlyAttendance.map(({ member, monthly, attendedMonths }) => (
@@ -528,8 +516,7 @@ export function Events() {
                 )}
               </tbody>
             </table>
-          </div>
-        </div>
+        </TableCard>
       )}
     </div>
   );

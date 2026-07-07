@@ -3,6 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/Ca
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
 import { Button } from "@/src/components/ui/Button";
 import { Input, Select } from "@/src/components/ui/Input";
+import { PageHeader } from "@/src/components/ui/PageHeader";
+import { Tabs } from "@/src/components/ui/Tabs";
+import { Empty } from "@/src/components/ui/Empty";
 import { toast } from "../components/ui/Toast";
 import { useConfirm } from "../hooks/useConfirm";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
@@ -66,29 +69,16 @@ export function Management() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <div>
-        <h1 className="text-2xl font-bold text-surface-900 tracking-tight">건물 / 부서 코드 관리</h1>
-        <p className="text-surface-500 mt-1">시스템에서 사용되는 건물과 부서 기초 코드를 관리합니다.</p>
-      </div>
+      <PageHeader title="건물 / 부서 코드 관리" subtitle="시스템에서 사용되는 건물과 부서 기초 코드를 관리합니다." />
 
-      <div className="flex space-x-2 border-b border-surface-200">
-        <button
-          onClick={() => setActiveTab("buildings")}
-          className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors min-h-[44px] ${
-            activeTab === "buildings" ? "border-primary-500 text-primary-600" : "border-transparent text-surface-500 hover:text-surface-700"
-          }`}
-        >
-          건물 관리
-        </button>
-        <button
-          onClick={() => setActiveTab("departments")}
-          className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors min-h-[44px] ${
-            activeTab === "departments" ? "border-primary-500 text-primary-600" : "border-transparent text-surface-500 hover:text-surface-700"
-          }`}
-        >
-          부서 관리
-        </button>
-      </div>
+      <Tabs
+        items={[
+          { key: "buildings", label: "건물 관리" },
+          { key: "departments", label: "부서 관리" },
+        ]}
+        active={activeTab}
+        onChange={(key) => setActiveTab(key as "buildings" | "departments")}
+      />
 
       {activeTab === "buildings" && (
         <Card>
@@ -156,7 +146,7 @@ export function Management() {
                     </tr>
                   ))}
                   {buildings.length === 0 && (
-                    <tr><td colSpan={3} className="px-4 py-8 text-center text-surface-500">등록된 건물이 없습니다.</td></tr>
+                    <tr><td colSpan={3}><Empty message="등록된 건물이 없습니다." /></td></tr>
                   )}
                 </tbody>
               </table>
@@ -256,7 +246,7 @@ export function Management() {
                     </tr>
                   ))}
                   {departments.length === 0 && (
-                    <tr><td colSpan={4} className="px-4 py-8 text-center text-surface-500">등록된 부서가 없습니다.</td></tr>
+                    <tr><td colSpan={4}><Empty message="등록된 부서가 없습니다." /></td></tr>
                   )}
                 </tbody>
               </table>

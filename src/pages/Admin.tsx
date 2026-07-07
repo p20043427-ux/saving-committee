@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import type { ChangeEvent } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/Card";
 import { Button } from "@/src/components/ui/Button";
+import { PageHeader } from "@/src/components/ui/PageHeader";
+import { Switch } from "@/src/components/ui/Switch";
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
 import { supabase } from "@/src/lib/supabase";
 import { toast } from "../components/ui/Toast";
@@ -357,18 +359,18 @@ export function Admin() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 max-w-5xl mx-auto">
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-surface-900 tracking-tight">시스템 설정</h1>
-          <p className="text-surface-500 mt-1">마스터 데이터 관리 및 시스템 구성을 변경합니다.</p>
-        </div>
-        {!canAdmin && (
-          <div className="flex items-center gap-1.5 text-xs text-warning-700 bg-warning-50 border border-warning-200 rounded-lg px-3 py-1.5">
-            <Shield className="w-3.5 h-3.5" aria-hidden="true" />
-            <span>관리자 전용 페이지</span>
-          </div>
-        )}
-      </div>
+      <PageHeader
+        title="시스템 설정"
+        subtitle="마스터 데이터 관리 및 시스템 구성을 변경합니다."
+        action={
+          !canAdmin ? (
+            <div className="flex items-center gap-1.5 text-xs text-warning-700 bg-warning-50 border border-warning-200 rounded-lg px-3 py-1.5">
+              <Shield className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>관리자 전용 페이지</span>
+            </div>
+          ) : undefined
+        }
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* 건물 마스터 관리 */}
@@ -723,10 +725,7 @@ CREATE POLICY "auth insert" ON sc_audit_log
                 <p className="font-medium text-sm text-surface-900">알림 설정</p>
                 <p className="text-xs text-surface-500 mt-1">'긴급' 상태 발생 시 원무팀(내선 1000)으로 자동 SMS를 발송합니다.</p>
               </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" className="sr-only peer" defaultChecked />
-                <div className="w-11 h-6 bg-surface-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
-              </label>
+              <Switch defaultChecked />
             </div>
             <div className="flex items-center justify-between py-4">
               <div>

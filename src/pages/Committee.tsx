@@ -3,6 +3,10 @@ import { supabase } from "@/src/lib/supabase";
 import { liveQuery } from "@/src/lib/db";
 import { Button } from "@/src/components/ui/Button";
 import { Input } from "@/src/components/ui/Input";
+import { PageHeader } from "@/src/components/ui/PageHeader";
+import { TableCard } from "@/src/components/ui/TableCard";
+import { Switch } from "@/src/components/ui/Switch";
+import { Empty } from "@/src/components/ui/Empty";
 import { toast } from "../components/ui/Toast";
 
 export interface CommitteeMember {
@@ -117,15 +121,15 @@ export function Committee() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300 max-w-4xl mx-auto">
-      <div className="flex justify-between items-center gap-3">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-surface-900 border-l-4 border-primary-500 pl-3">위원회 명단 관리</h1>
-          <p className="text-surface-500 text-sm mt-1">환경/에너지 관리 위원회 명단을 관리합니다.</p>
-        </div>
-        <Button variant="primary" size="md" onClick={() => setIsFormOpen(true)} className="shrink-0">
-          + 위원 추가
-        </Button>
-      </div>
+      <PageHeader
+        title="위원회 명단 관리"
+        subtitle="환경/에너지 관리 위원회 명단을 관리합니다."
+        action={
+          <Button variant="primary" size="md" onClick={() => setIsFormOpen(true)} className="shrink-0">
+            + 위원 추가
+          </Button>
+        }
+      />
 
       {isFormOpen && (
         <div className="bg-white p-5 rounded-xl shadow-gh-sm border border-surface-200">
@@ -161,15 +165,11 @@ export function Committee() {
                 />
               </div>
               <div className="flex items-center sm:mt-6">
-                <label className="flex items-center gap-3 cursor-pointer min-h-[44px]">
-                  <input
-                    type="checkbox"
-                    checked={formData.isActive}
-                    onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                    className="w-4 h-4 rounded border-surface-300 text-primary-600 focus:ring-primary-500"
-                  />
-                  <span className="text-sm font-medium text-surface-700">활동 중 (현재 위원)</span>
-                </label>
+                <Switch
+                  checked={formData.isActive}
+                  onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                  label="활동 중 (현재 위원)"
+                />
               </div>
             </div>
             <div className="flex justify-end gap-2 pt-2">
@@ -184,9 +184,7 @@ export function Committee() {
 
       {/* 모바일: 카드 뷰 */}
       <div className="sm:hidden space-y-3">
-        {members.length === 0 && (
-          <div className="text-center py-10 text-surface-500 text-sm">등록된 위원이 없습니다.</div>
-        )}
+        {members.length === 0 && <Empty message="등록된 위원이 없습니다." />}
         {members.map((member) => (
           <div key={member.id} className="bg-white rounded-xl border border-surface-200 p-4 shadow-gh-sm">
             <div className="flex items-start justify-between gap-2">
@@ -224,8 +222,7 @@ export function Committee() {
       </div>
 
       {/* 데스크탑: 테이블 뷰 */}
-      <div className="hidden sm:block bg-white rounded-xl shadow-gh-sm border border-surface-200 overflow-hidden">
-        <div className="overflow-x-auto">
+      <TableCard className="hidden sm:block">
           <table className="w-full text-left text-sm whitespace-nowrap">
             <thead className="bg-surface-50 text-surface-600 border-b border-surface-200">
               <tr>
@@ -239,7 +236,7 @@ export function Committee() {
             <tbody className="divide-y divide-surface-100">
               {members.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-8 text-center text-surface-500">등록된 위원이 없습니다.</td>
+                  <td colSpan={5}><Empty message="등록된 위원이 없습니다." /></td>
                 </tr>
               ) : (
                 members.map((member) => (
@@ -271,8 +268,7 @@ export function Committee() {
               )}
             </tbody>
           </table>
-        </div>
-      </div>
+      </TableCard>
     </div>
   );
 }
