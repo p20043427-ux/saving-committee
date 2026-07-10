@@ -13,6 +13,7 @@ import { TableCard } from "../components/ui/TableCard";
 import { Checkbox } from "../components/ui/Checkbox";
 import { Tooltip } from "../components/ui/Tooltip";
 import { Empty } from "../components/ui/Empty";
+import { Pagination } from "../components/ui/Pagination";
 
 export interface RecordDoc {
   id: string;
@@ -765,29 +766,14 @@ export function DataManagement() {
           </TableCard>
 
           {totalPages > 1 && (
-            <div className="flex items-center justify-between px-4 py-3 bg-white rounded-xl border border-surface-200">
-              <span className="text-xs text-surface-500">
-                전체 {filteredRecords.length}건 중 {(page-1)*PAGE_SIZE+1}–{Math.min(page*PAGE_SIZE, filteredRecords.length)}건
-              </span>
-              <div className="flex gap-1">
-                <button
-                  onClick={() => setPage(p => Math.max(1, p-1))}
-                  disabled={page === 1}
-                  className="px-3 py-2 text-sm border border-surface-300 rounded-md disabled:opacity-40 hover:bg-surface-50 min-h-[44px]"
-                >이전</button>
-                {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => i + 1).map(n => (
-                  <button
-                    key={n}
-                    onClick={() => setPage(n)}
-                    className={`px-3 py-2 text-sm rounded-md border min-h-[44px] ${n === page ? 'bg-primary-700 text-white border-primary-700' : 'border-surface-300 hover:bg-surface-50'}`}
-                  >{n}</button>
-                ))}
-                <button
-                  onClick={() => setPage(p => Math.min(totalPages, p+1))}
-                  disabled={page === totalPages}
-                  className="px-3 py-2 text-sm border border-surface-300 rounded-md disabled:opacity-40 hover:bg-surface-50 min-h-[44px]"
-                >다음</button>
-              </div>
+            <div className="px-4 py-3 bg-white rounded-xl border border-surface-200">
+              <Pagination
+                current={page}
+                total={totalPages}
+                totalItems={filteredRecords.length}
+                pageSize={PAGE_SIZE}
+                onChange={setPage}
+              />
             </div>
           )}
         </div>
