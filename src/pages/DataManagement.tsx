@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/src/lib/supabase";
-import { liveQuery, rowToRecord, computeStatus, RecordRow } from "@/src/lib/db";
+import { liveQuery, rowToRecord, RecordRow } from "@/src/lib/db";
+import { RecordEditDialog } from "@/src/components/features/RecordEditDialog";
+import { useInspectionItemNames } from "@/src/hooks/useInspectionItemNames";
 import { useAuth } from "@/src/components/auth/AuthProvider";
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
 import { Download, CalendarDays, BarChart2, ArrowUp, ArrowDown } from "lucide-react";
@@ -62,9 +64,10 @@ export function DataManagement() {
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 30;
 
-  // Edit State
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<Partial<RecordDoc>>({});
+  // Edit State — 수정은 팝업(RecordEditDialog)에서 처리
+  const [editingRecord, setEditingRecord] = useState<RecordDoc | null>(null);
+  const [members, setMembers] = useState<{ id: string; name: string }[]>([]);
+  const itemNames = useInspectionItemNames();
   const [isExporting, setIsExporting] = useState(false);
   const { confirm, dialogProps } = useConfirm();
 
@@ -315,10 +318,10 @@ export function DataManagement() {
   };
 
   const scoreFields: { key: keyof RecordDoc['scores']; label: string }[] = [
-    { key: 'lights', label: '조명/전열' },
-    { key: 'water', label: '수돗물' },
-    { key: 'recycle', label: '재활용' },
-    { key: 'focus', label: '관심도' },
+    { key: 'lights', label: itemNames.lights },
+    { key: 'water', label: itemNames.water },
+    { key: 'recycle', label: itemNames.recycle },
+    { key: 'focus', label: itemNames.focus },
   ];
 
   const renderRawSortIcon = (key: RawSortKey) => {
@@ -331,62 +334,14 @@ export function DataManagement() {
     return aggSortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3 inline ml-1 text-primary-500"/> : <ArrowDown className="w-3 h-3 inline ml-1 text-primary-500"/>;
   };
 
-  // Editing logic
-  const startEdit = (record: RecordDoc) => {
-    setEditingId(record.id);
-    setEditForm({ ...record });
-  };
-
-  const cancelEdit = () => {
-    setEditingId(null);
-    setEditForm({});
-  };
-
-  const handleScoreChange = (type: keyof RecordDoc['scores'], value: string) => {
-    const num = parseInt(value) || 0;
-    const clamped = Math.min(Math.max(num, 0), 5);
-
-    setEditForm(prev => {
-      const newScores = { ...prev.scores, [type]: clamped } as RecordDoc['scores'];
-      const totalScore = (newScores.lights || 0) + (newScores.water || 0) + (newScores.recycle || 0) + (newScores.focus || 0);
-      const status = computeStatus(newScores, prev.notes || "");
-      return { ...prev, scores: newScores, totalScore, status };
-    });
-  };
-
-  const handleNotesChange = (value: string) => {
-    setEditForm(prev => {
-      const scores = prev.scores || { lights: 0, water: 0, recycle: 0, focus: 0 };
-      const status = computeStatus(scores, value);
-      return { ...prev, notes: value, status };
-    });
-  };
-
-  const saveEdit = async (id: string) => {
-    if (!editForm || !id) return;
-    try {
-      const s = editForm.scores || { lights: 0, water: 0, recycle: 0, focus: 0 };
-      const { error } = await supabase
-        .from("sc_records")
-        .update({
-          inspector: editForm.inspector,
-          lights: s.lights,
-          water: s.water,
-          recycle: s.recycle,
-          focus: s.focus,
-          total_score: editForm.totalScore,
-          notes: editForm.notes,
-          status: editForm.status,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", id);
-      if (error) throw error;
-      setEditingId(null);
-    } catch (error) {
-      console.error("저장 오류:", error);
-      toast.error("문서 업데이트 중 오류가 발생했습니다.");
-    }
-  };
+  // 점검자 선택지: 활동 중인 위원
+  useEffect(() => {
+    return liveQuery<{ id: string; name: string; is_active: boolean }>(
+      "sc_committee",
+      () => supabase.from("sc_committee").select("id,name,is_active"),
+      (rows) => setMembers(rows.filter((r) => r.is_active !== false).map((r) => ({ id: r.id, name: r.name })))
+    );
+  }, []);
 
   const deleteRecord = async (id: string) => {
     const ok = await confirm("데이터 삭제", "정말 이 데이터를 삭제하시겠습니까? (이 작업은 되돌릴 수 없습니다.)");
@@ -506,7 +461,6 @@ export function DataManagement() {
               <Empty message="선택된 기간에 입력된 점검 데이터가 없습니다." className="bg-white rounded-xl border border-surface-200" />
             ) : (
               pagedRecords.map(record => {
-                const isEditing = editingId === record.id;
                 return (
                   <div
                     key={record.id}
@@ -533,28 +487,19 @@ export function DataManagement() {
                         </div>
                       </div>
                       <span className={`shrink-0 px-2 py-1 text-xs font-semibold rounded-md ${
-                        (isEditing ? editForm.status : record.status) === '정상' ? 'bg-success-100 text-success-700' :
-                        (isEditing ? editForm.status : record.status) === '주의' ? 'bg-warning-100 text-warning-700' :
+                        record.status === '정상' ? 'bg-success-100 text-success-700' :
+                        record.status === '주의' ? 'bg-warning-100 text-warning-700' :
                         'bg-danger-100 text-danger-700'
                       }`}>
-                        {isEditing ? editForm.status : record.status}
+                        {record.status}
                       </span>
                     </div>
 
                     <div className="grid grid-cols-4 gap-2 text-center">
                       {scoreFields.map(({ key, label }) => (
                         <div key={key}>
-                          <div className="text-[10px] text-surface-500 mb-1">{label}</div>
-                          {isEditing ? (
-                            <input
-                              type="number" min="0" max="5"
-                              className="w-full px-1 py-1 text-center text-sm border border-surface-300 rounded"
-                              value={editForm.scores?.[key]}
-                              onChange={(e) => handleScoreChange(key, e.target.value)}
-                            />
-                          ) : (
-                            <div className="text-sm font-semibold text-surface-900">{record.scores?.[key] || 0}</div>
-                          )}
+                          <div className="text-[10px] text-surface-500 mb-1 break-keep">{label}</div>
+                          <div className="text-sm font-semibold text-surface-900">{record.scores?.[key] || 0}</div>
                         </div>
                       ))}
                     </div>
@@ -562,44 +507,18 @@ export function DataManagement() {
                     <div className="flex items-center justify-between text-sm border-t border-surface-100 pt-2">
                       <span className="text-surface-500 flex items-center gap-1">
                         점검자
-                        {isEditing ? (
-                          <input
-                            type="text"
-                            className="w-24 px-2 py-1 text-sm border border-surface-300 rounded"
-                            value={editForm.inspector || ""}
-                            onChange={(e) => setEditForm({ ...editForm, inspector: e.target.value })}
-                          />
-                        ) : (
-                          <span className="font-medium text-surface-800">{record.inspector}</span>
-                        )}
+                        <span className="font-medium text-surface-800">{record.inspector}</span>
                       </span>
-                      <span className="font-bold text-surface-900">총점 {isEditing ? editForm.totalScore : record.totalScore}</span>
+                      <span className="font-bold text-surface-900">총점 {record.totalScore}</span>
                     </div>
 
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        className="w-full px-2 py-1.5 text-sm border border-surface-300 rounded"
-                        placeholder="특이사항"
-                        value={editForm.notes || ""}
-                        onChange={(e) => handleNotesChange(e.target.value)}
-                      />
-                    ) : record.notes ? (
+                    {record.notes && (
                       <div className="text-xs text-surface-600 bg-surface-50 rounded-md px-2 py-1.5">{record.notes}</div>
-                    ) : null}
+                    )}
 
                     <div className="flex justify-end gap-2 pt-1">
-                      {isEditing ? (
-                        <>
-                          <button onClick={() => saveEdit(record.id)} className="px-3 py-1.5 bg-primary-600 text-white rounded-md text-xs font-semibold hover:bg-primary-700 min-h-[36px]">저장</button>
-                          <button onClick={cancelEdit} className="px-3 py-1.5 bg-surface-200 text-surface-700 rounded-md text-xs font-semibold hover:bg-surface-300 min-h-[36px]">취소</button>
-                        </>
-                      ) : (
-                        <>
-                          <button onClick={() => startEdit(record)} className="px-3 py-1.5 text-primary-600 bg-primary-50 rounded-md text-xs font-semibold hover:bg-primary-100 min-h-[36px]">수정</button>
-                          <button onClick={() => deleteRecord(record.id)} className="px-3 py-1.5 text-danger-600 bg-danger-50 rounded-md text-xs font-semibold hover:bg-danger-100 min-h-[36px]">삭제</button>
-                        </>
-                      )}
+                      <button onClick={() => setEditingRecord(record)} className="px-3 py-1.5 text-primary-600 bg-primary-50 rounded-md text-xs font-semibold hover:bg-primary-100 min-h-[36px]">수정</button>
+                      <button onClick={() => deleteRecord(record.id)} className="px-3 py-1.5 text-danger-600 bg-danger-50 rounded-md text-xs font-semibold hover:bg-danger-100 min-h-[36px]">삭제</button>
                     </div>
                   </div>
                 );
@@ -633,10 +552,10 @@ export function DataManagement() {
                     <th className="py-3 px-4 font-semibold cursor-pointer hover:bg-surface-100 select-none whitespace-nowrap" onClick={() => handleRawSort('buildingName')}>소속 건물{renderRawSortIcon('buildingName')}</th>
                     <th className="py-3 px-4 font-semibold cursor-pointer hover:bg-surface-100 select-none whitespace-nowrap" onClick={() => handleRawSort('departmentName')}>부서명{renderRawSortIcon('departmentName')}</th>
                     <th className="py-3 px-4 font-semibold cursor-pointer hover:bg-surface-100 select-none whitespace-nowrap" onClick={() => handleRawSort('inspector')}>점검자{renderRawSortIcon('inspector')}</th>
-                    <th className="py-3 px-4 font-semibold text-center cursor-pointer hover:bg-surface-100 select-none whitespace-nowrap" onClick={() => handleRawSort('lights')}>조명/전열{renderRawSortIcon('lights')}</th>
-                    <th className="py-3 px-4 font-semibold text-center cursor-pointer hover:bg-surface-100 select-none whitespace-nowrap" onClick={() => handleRawSort('water')}>수돗물{renderRawSortIcon('water')}</th>
-                    <th className="py-3 px-4 font-semibold text-center cursor-pointer hover:bg-surface-100 select-none whitespace-nowrap" onClick={() => handleRawSort('recycle')}>재활용{renderRawSortIcon('recycle')}</th>
-                    <th className="py-3 px-4 font-semibold text-center cursor-pointer hover:bg-surface-100 select-none whitespace-nowrap" onClick={() => handleRawSort('focus')}>관심도{renderRawSortIcon('focus')}</th>
+                    <th className="py-3 px-4 font-semibold text-center cursor-pointer hover:bg-surface-100 select-none whitespace-nowrap" onClick={() => handleRawSort('lights')}>{itemNames.lights}{renderRawSortIcon('lights')}</th>
+                    <th className="py-3 px-4 font-semibold text-center cursor-pointer hover:bg-surface-100 select-none whitespace-nowrap" onClick={() => handleRawSort('water')}>{itemNames.water}{renderRawSortIcon('water')}</th>
+                    <th className="py-3 px-4 font-semibold text-center cursor-pointer hover:bg-surface-100 select-none whitespace-nowrap" onClick={() => handleRawSort('recycle')}>{itemNames.recycle}{renderRawSortIcon('recycle')}</th>
+                    <th className="py-3 px-4 font-semibold text-center cursor-pointer hover:bg-surface-100 select-none whitespace-nowrap" onClick={() => handleRawSort('focus')}>{itemNames.focus}{renderRawSortIcon('focus')}</th>
                     <th className="py-3 px-4 font-semibold text-center cursor-pointer hover:bg-surface-100 select-none whitespace-nowrap" onClick={() => handleRawSort('totalScore')}>총점{renderRawSortIcon('totalScore')}</th>
                     <th className="py-3 px-4 font-semibold text-center cursor-pointer hover:bg-surface-100 select-none whitespace-nowrap" onClick={() => handleRawSort('status')}>상태{renderRawSortIcon('status')}</th>
                     <th className="py-3 px-4 font-semibold min-w-[200px]">특이사항</th>
@@ -652,7 +571,6 @@ export function DataManagement() {
                     </tr>
                   ) : (
                     pagedRecords.map(record => {
-                      const isEditing = editingId === record.id;
                       return (
                         <tr key={record.id} className={`hover:bg-surface-50 group ${selectedIds.has(record.id) ? "bg-primary-50" : ""}`}>
                           <td className="py-2 px-4 w-10">
@@ -672,90 +590,35 @@ export function DataManagement() {
                           <td className="py-2 px-4 text-surface-600">{record.date.split("T")[0]}</td>
                           <td className="py-2 px-4 text-surface-900">{getBuildingName(record.buildingId)}</td>
                           <td className="py-2 px-4 text-surface-900 font-medium">{record.departmentName}</td>
-                          <td className="py-2 px-4">
-                            {isEditing ? (
-                              <input 
-                                type="text" 
-                                className="w-20 px-2 py-1 text-sm border border-surface-300 rounded" 
-                                value={editForm.inspector || ""} 
-                                onChange={(e) => setEditForm({ ...editForm, inspector: e.target.value })}
-                              />
-                            ) : record.inspector}
-                          </td>
+                          <td className="py-2 px-4">{record.inspector}</td>
+                          <td className="py-2 px-4 text-center">{record.scores?.lights || 0}</td>
+                          <td className="py-2 px-4 text-center">{record.scores?.water || 0}</td>
+                          <td className="py-2 px-4 text-center">{record.scores?.recycle || 0}</td>
+                          <td className="py-2 px-4 text-center">{record.scores?.focus || 0}</td>
+                          <td className="py-2 px-4 text-center font-bold text-surface-900">{record.totalScore}</td>
                           <td className="py-2 px-4 text-center">
-                            {isEditing ? (
-                              <input type="number" min="0" max="5" className="w-12 px-1 py-1 text-center text-sm border border-surface-300 rounded" 
-                                value={editForm.scores?.lights} onChange={(e) => handleScoreChange('lights', e.target.value)} />
-                            ) : record.scores?.lights || 0}
-                          </td>
-                          <td className="py-2 px-4 text-center">
-                            {isEditing ? (
-                              <input type="number" min="0" max="5" className="w-12 px-1 py-1 text-center text-sm border border-surface-300 rounded" 
-                                value={editForm.scores?.water} onChange={(e) => handleScoreChange('water', e.target.value)} />
-                            ) : record.scores?.water || 0}
-                          </td>
-                          <td className="py-2 px-4 text-center">
-                            {isEditing ? (
-                              <input type="number" min="0" max="5" className="w-12 px-1 py-1 text-center text-sm border border-surface-300 rounded" 
-                                value={editForm.scores?.recycle} onChange={(e) => handleScoreChange('recycle', e.target.value)} />
-                            ) : record.scores?.recycle || 0}
-                          </td>
-                          <td className="py-2 px-4 text-center">
-                            {isEditing ? (
-                              <input type="number" min="0" max="5" className="w-12 px-1 py-1 text-center text-sm border border-surface-300 rounded" 
-                                value={editForm.scores?.focus} onChange={(e) => handleScoreChange('focus', e.target.value)} />
-                            ) : record.scores?.focus || 0}
-                          </td>
-                          <td className="py-2 px-4 text-center font-bold text-surface-900">
-                            {isEditing ? editForm.totalScore : record.totalScore}
-                          </td>
-                          <td className="py-2 px-4 text-center">
-                            {isEditing ? (
-                              <span className={`px-2 py-1 text-xs font-semibold rounded-md ${
-                                editForm.status === '정상' ? 'bg-success-100 text-success-700' :
-                                editForm.status === '주의' ? 'bg-warning-100 text-warning-700' :
-                                'bg-danger-100 text-danger-700'
-                              }`}>
-                                {editForm.status}
-                              </span>
-                            ) : (
-                              <span className={`px-2 py-1 text-xs font-semibold rounded-md ${
-                                record.status === '정상' ? 'bg-success-100 text-success-700' :
-                                record.status === '주의' ? 'bg-warning-100 text-warning-700' :
-                                'bg-danger-100 text-danger-700'
-                              }`}>
-                                {record.status}
-                              </span>
-                            )}
+                            <span className={`px-2 py-1 text-xs font-semibold rounded-md ${
+                              record.status === '정상' ? 'bg-success-100 text-success-700' :
+                              record.status === '주의' ? 'bg-warning-100 text-warning-700' :
+                              'bg-danger-100 text-danger-700'
+                            }`}>
+                              {record.status}
+                            </span>
                           </td>
                           <td className="py-2 px-4">
-                            {isEditing ? (
-                              <input 
-                                type="text" 
-                                className="w-full min-w-[200px] px-2 py-1 text-sm border border-surface-300 rounded" 
-                                value={editForm.notes || ""} 
-                                onChange={(e) => handleNotesChange(e.target.value)}
-                              />
-                            ) : record.notes ? (
+                            {record.notes ? (
                               <Tooltip content={record.notes}>
                                 <span className="truncate max-w-[200px] block">{record.notes}</span>
                               </Tooltip>
                             ) : (
-                              <span className="truncate max-w-[200px] block">{record.notes}</span>
+                              <span className="truncate max-w-[200px] block"></span>
                             )}
                           </td>
                           <td className="py-2 px-4 text-right">
-                            {isEditing ? (
-                              <div className="flex justify-end gap-2">
-                                <button onClick={() => saveEdit(record.id)} className="px-2 py-1 bg-primary-600 text-white rounded text-xs hover:bg-primary-700">저장</button>
-                                <button onClick={cancelEdit} className="px-2 py-1 bg-surface-200 text-surface-700 rounded text-xs hover:bg-surface-300">취소</button>
-                              </div>
-                            ) : (
-                              <div className="flex justify-end gap-2">
-                                <button onClick={() => startEdit(record)} className="px-2 py-1 text-primary-600 bg-primary-50 rounded text-xs hover:bg-primary-100">수정</button>
-                                <button onClick={() => deleteRecord(record.id)} className="px-2 py-1 text-danger-600 bg-danger-50 rounded text-xs hover:bg-danger-100">삭제</button>
-                              </div>
-                            )}
+                            <div className="flex justify-end gap-2">
+                              <button onClick={() => setEditingRecord(record)} className="px-2 py-1 text-primary-600 bg-primary-50 rounded text-xs hover:bg-primary-100">수정</button>
+                              <button onClick={() => deleteRecord(record.id)} className="px-2 py-1 text-danger-600 bg-danger-50 rounded text-xs hover:bg-danger-100">삭제</button>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -895,6 +758,12 @@ export function DataManagement() {
           </TableCard>
         </div>
       )}
+      <RecordEditDialog
+        record={editingRecord}
+        buildingName={editingRecord ? getBuildingName(editingRecord.buildingId) : ""}
+        members={members}
+        onClose={() => setEditingRecord(null)}
+      />
       <ConfirmDialog {...dialogProps} />
     </div>
   );

@@ -26,6 +26,7 @@ import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { usePermission } from "../hooks/usePermission";
 import { useAuditLog } from "../hooks/useAuditLog";
 import { useUndoDelete } from "../hooks/useUndoDelete";
+import { useInspectionItemNames } from "../hooks/useInspectionItemNames";
 import { liveQuery, computeStatus } from "../lib/db";
 import type { AuditEntry } from "../hooks/useAuditLog";
 import { Shield, Download, Upload, RotateCcw, FileText, Clock, User } from "lucide-react";
@@ -212,7 +213,8 @@ export function Admin() {
 
   const rulesDirty = JSON.stringify(draft) !== JSON.stringify(rules);
   const rulesError = validateStatusRules(draft);
-  const ruleSummary = describeStatusRules(draft);
+  const itemNames = useInspectionItemNames();
+  const ruleSummary = describeStatusRules(draft, itemNames);
 
   const setRuleNumber = (key: Exclude<keyof StatusRules, "warningOnNotes">, value: string) => {
     setDraft((d) => ({ ...d, [key]: value === "" ? 0 : Number(value) }));
@@ -563,6 +565,11 @@ export function Admin() {
             </CardTitle>
           </CardHeader>
           <CardContent>
+            <p className="text-xs text-surface-500 mb-4">
+              점검표 입력·점검 데이터 화면에는 기본 4개 항목(소등관리·수압관리·분리수거·중점점검)의 <b>이름 수정</b>만
+              반영됩니다. 점수가 4개 고정 칸에 저장되는 구조라, 항목을 새로 추가하거나 삭제해도 입력 화면의 항목 수는
+              바뀌지 않습니다.
+            </p>
             {itemsLoading ? (
               <p className="text-sm text-surface-400 text-center py-4">불러오는 중...</p>
             ) : (
@@ -671,8 +678,8 @@ export function Admin() {
                 <p className="text-sm font-semibold text-danger-700">🚨 긴급 — 아래 중 하나라도 해당하면</p>
                 {([
                   { key: "urgentTotalBelow", label: "총점", suffix: "점 미만", max: MAX_TOTAL_SCORE },
-                  { key: "urgentLightsAtMost", label: "조명/전열", suffix: "점 이하", max: MAX_ITEM_SCORE },
-                  { key: "urgentWaterAtMost", label: "수돗물", suffix: "점 이하", max: MAX_ITEM_SCORE },
+                  { key: "urgentLightsAtMost", label: itemNames.lights, suffix: "점 이하", max: MAX_ITEM_SCORE },
+                  { key: "urgentWaterAtMost", label: itemNames.water, suffix: "점 이하", max: MAX_ITEM_SCORE },
                 ] as const).map((f) => (
                   <label key={f.key} className="flex items-center gap-2 text-sm text-surface-700">
                     <span className="w-20 shrink-0">{f.label}</span>

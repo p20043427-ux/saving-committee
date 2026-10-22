@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/Card";
 import { Badge } from "@/src/components/ui/Badge";
 import { supabase } from "@/src/lib/supabase";
-import { liveQuery } from "@/src/lib/db";
+import { liveQuery, uniqueBy } from "@/src/lib/db";
 import { useAuth } from "@/src/components/auth/AuthProvider";
 import { InlineInputForm } from "@/src/components/features/InlineInputForm";
 import { DatePickerWithData } from "@/src/components/features/DatePickerWithData";
@@ -266,10 +266,12 @@ export function Monitoring() {
           {/* 점검 진행률 */}
           {(() => {
             const totalDepts = departments.length;
-            const inspectedCount = records.length;
+            // 같은 부서를 여러 번 입력했으면 최신 1건만 진행률·집계에 반영 (records는 최신순)
+            const latestRecords = uniqueBy(records, r => r.departmentId);
+            const inspectedCount = latestRecords.length;
             const progressPct = totalDepts > 0 ? Math.round((inspectedCount / totalDepts) * 100) : 0;
-            const urgentCount = records.filter(r => r.status === "긴급").length;
-            const warningCount = records.filter(r => r.status === "주의").length;
+            const urgentCount = latestRecords.filter(r => r.status === "긴급").length;
+            const warningCount = latestRecords.filter(r => r.status === "주의").length;
             return (
               <div className="mb-4 p-4 bg-white rounded-xl border border-surface-200">
                 <div className="flex items-center justify-between mb-2">

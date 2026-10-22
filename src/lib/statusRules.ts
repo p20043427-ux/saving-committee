@@ -112,11 +112,14 @@ export function validateStatusRules(r: StatusRules): string | null {
 }
 
 /** 현재 기준을 사람이 읽을 수 있는 문장으로 설명 */
-export function describeStatusRules(r: StatusRules): { urgent: string[]; warning: string[] } {
+export function describeStatusRules(
+  r: StatusRules,
+  labels: { lights: string; water: string } = { lights: "조명/전열", water: "수돗물" }
+): { urgent: string[]; warning: string[] } {
   const urgent: string[] = [];
   if (r.urgentTotalBelow > 0) urgent.push(`총점 ${r.urgentTotalBelow}점 미만`);
-  if (r.urgentLightsAtMost > 0) urgent.push(`조명/전열 ${r.urgentLightsAtMost}점 이하`);
-  if (r.urgentWaterAtMost > 0) urgent.push(`수돗물 ${r.urgentWaterAtMost}점 이하`);
+  if (r.urgentLightsAtMost > 0) urgent.push(`${labels.lights} ${r.urgentLightsAtMost}점 이하`);
+  if (r.urgentWaterAtMost > 0) urgent.push(`${labels.water} ${r.urgentWaterAtMost}점 이하`);
   const warning: string[] = [];
   if (r.warningTotalBelow > 0) warning.push(`총점 ${r.warningTotalBelow}점 미만`);
   if (r.warningOnNotes) warning.push("특이사항 입력");

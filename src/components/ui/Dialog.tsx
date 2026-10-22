@@ -69,7 +69,7 @@ export function Dialog({ open, title, onClose, footer, width = 440, children }: 
         aria-modal="true"
         aria-labelledby={titleId}
         className="relative bg-white rounded-2xl shadow-gh-lg max-h-[84vh] flex flex-col mx-4"
-        style={{ width }}
+        style={{ width, maxWidth: "calc(100vw - 2rem)" }}
       >
         <div className="flex items-center justify-between px-6 pt-[18px]">
           <h2 id={titleId} className="text-xl font-semibold text-surface-900">

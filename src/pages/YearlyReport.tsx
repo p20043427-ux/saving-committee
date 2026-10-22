@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/src/components/ui/Card";
 import { PageHeader } from "@/src/components/ui/PageHeader";
+import { useInspectionItemNames } from "@/src/hooks/useInspectionItemNames";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { supabase } from "@/src/lib/supabase";
 import { useAuth } from "@/src/components/auth/AuthProvider";
@@ -22,6 +23,7 @@ interface RecordData {
 export function YearlyReport() {
   const { user } = useAuth();
   const { buildings, departments, isLoading: orgLoading } = useOrganization();
+  const itemNames = useInspectionItemNames();
   const [selectedDept, setSelectedDept] = useState<string>(""); 
   const [records, setRecords] = useState<RecordData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -330,10 +332,10 @@ export function YearlyReport() {
                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(15,48,83,.08), 0 1px 3px rgba(15,48,83,.05)' }}
                   />
                   <Legend iconType="circle" wrapperStyle={{ fontSize: "12px", paddingTop: "10px" }} />
-                  <Bar dataKey="lights" name="소등" fill="#f78b1e" radius={[2, 2, 0, 0]} />
-                  <Bar dataKey="water" name="수압" fill="#2270b4" radius={[2, 2, 0, 0]} />
-                  <Bar dataKey="recycle" name="분리수거" fill="#1e9e5a" radius={[2, 2, 0, 0]} />
-                  <Bar dataKey="focus" name="중점점검" fill="#de4a47" radius={[2, 2, 0, 0]} />
+                  <Bar dataKey="lights" name={itemNames.lights} fill="#f78b1e" radius={[2, 2, 0, 0]} />
+                  <Bar dataKey="water" name={itemNames.water} fill="#2270b4" radius={[2, 2, 0, 0]} />
+                  <Bar dataKey="recycle" name={itemNames.recycle} fill="#1e9e5a" radius={[2, 2, 0, 0]} />
+                  <Bar dataKey="focus" name={itemNames.focus} fill="#de4a47" radius={[2, 2, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
              ) : (

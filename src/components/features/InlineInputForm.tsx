@@ -9,6 +9,8 @@ import { Select, Textarea } from "@/src/components/ui/Input";
 import { Alert } from "@/src/components/ui/Alert";
 import { toast } from "@/src/components/ui/Toast";
 import { useAuditLog } from "@/src/hooks/useAuditLog";
+import { SCORE_ITEM_IDS, SCORE_KEYS, useInspectionItemNames } from "@/src/hooks/useInspectionItemNames";
+import { ScorePicker } from "./ScorePicker";
 
 interface InlineInputFormProps {
   buildingId: string;
@@ -24,6 +26,7 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
   const { user } = useAuth();
   const { log } = useAuditLog();
   const { buildings, departments } = useOrganization();
+  const itemNames = useInspectionItemNames();
   const [inspector, setInspector] = useState(defaultInspector);
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -123,29 +126,18 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
       </div>
 
       <div className="space-y-4">
-        {MOCK_INSPECTION_ITEMS.map(item => (
-          <div key={item.id} className="flex flex-col space-y-2">
-            <span className="text-sm font-medium text-surface-700">{item.name}</span>
-            <div className="flex items-center space-x-1">
-              {[1, 2, 3, 4, 5].map((score) => (
-                <label key={score} className="flex flex-col items-center cursor-pointer group flex-1 py-1">
-                  <input 
-                    type="radio" 
-                    name={`inline-${item.id}`} 
-                    value={score} 
-                    checked={scores[item.id] === score}
-                    onChange={() => setScores(prev => ({ ...prev, [item.id]: score }))}
-                    className="sr-only" 
-                  />
-                  <div className={`w-11 h-11 rounded-full flex items-center justify-center text-base font-semibold transition-all outline outline-1 group-hover:bg-primary-50 touch-manipulation
-                    ${scores[item.id] === score ? 'bg-primary-600 text-white outline-primary-600 shadow-gh-sm' : 'text-surface-700 outline-surface-300'}`}>
-                    {score}
-                  </div>
-                </label>
-              ))}
-            </div>
-          </div>
-        ))}
+        {MOCK_INSPECTION_ITEMS.map(item => {
+          const key = SCORE_KEYS.find((k) => SCORE_ITEM_IDS[k] === item.id);
+          return (
+            <ScorePicker
+              key={item.id}
+              name={`inline-${buildingId}-${departmentId}-${item.id}`}
+              label={key ? itemNames[key] : item.name}
+              value={scores[item.id]}
+              onChange={(score) => setScores(prev => ({ ...prev, [item.id]: score }))}
+            />
+          );
+        })}
       </div>
 
       <div className="space-y-2 text-sm">

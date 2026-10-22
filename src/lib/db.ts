@@ -102,6 +102,17 @@ export function rowToRecord(r: RecordRow): AppRecord {
   };
 }
 
+/** key가 같은 항목은 처음 나온 것만 남긴다. 최신순으로 정렬된 목록이면 "부서별 최신 기록 1건"이 된다. */
+export function uniqueBy<T>(rows: T[], key: (row: T) => string): T[] {
+  const seen = new Set<string>();
+  return rows.filter((row) => {
+    const k = key(row);
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
+}
+
 /**
  * 점검 점수 → 상태 판정 (기존 3곳에 흩어져 있던 로직을 한 곳으로 통합)
  * 기준값은 시스템 설정(sc_settings)에서 관리하며, 지정하지 않으면 현재 저장된 기준을 쓴다.

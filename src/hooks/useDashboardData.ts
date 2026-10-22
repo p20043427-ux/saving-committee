@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/src/lib/supabase";
-import { liveQuery } from "@/src/lib/db";
+import { liveQuery, uniqueBy } from "@/src/lib/db";
 
 interface ScheduleRow { id: string; date: string; turn: number; inspectors: string[]; month: string; }
 interface EventRow { id: string; date: string; title: string; attendees: string[]; month: string; }
-interface RecordSummary { department_id: string; status: string; total_score: number; }
+interface RecordSummary { department_id: string; status: string; total_score: number; created_at?: string; }
 interface MonthlyRecord { department_id: string; status: string; total_score: number; date: string; }
 
 export function useDashboardData() {
@@ -37,8 +37,9 @@ export function useDashboardData() {
 
     unsubs.push(liveQuery<RecordSummary>(
       "sc_records",
-      () => supabase.from("sc_records").select("department_id, status, total_score").gte("date", startOfDay).lte("date", endOfDay),
-      (rows) => { setTodayRecords(rows); setIsLoading(false); },
+      () => supabase.from("sc_records").select("department_id, status, total_score, created_at").gte("date", startOfDay).lte("date", endOfDay).order("created_at", { ascending: false }),
+      // 같은 날 같은 부서를 여러 번 입력했으면 최신 1건만 현황에 반영
+      (rows) => { setTodayRecords(uniqueBy(rows, (r) => r.department_id)); setIsLoading(false); },
       () => setIsLoading(false)
     ));
 
