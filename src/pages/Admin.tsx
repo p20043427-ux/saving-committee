@@ -4,7 +4,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/Ca
 import { Button } from "@/src/components/ui/Button";
 import { PageHeader } from "@/src/components/ui/PageHeader";
 import { Switch } from "@/src/components/ui/Switch";
+import { Input } from "@/src/components/ui/Input";
+import { Alert } from "@/src/components/ui/Alert";
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
+import {
+  DEFAULT_STATUS_RULES,
+  MAX_ITEM_SCORE,
+  MAX_TOTAL_SCORE,
+  SETTINGS_TABLE_SQL,
+  STATUS_RULES_KEY,
+  describeStatusRules,
+  saveStatusRules,
+  useStatusRulesState,
+  validateStatusRules,
+  type StatusRules,
+} from "@/src/lib/statusRules";
 import { supabase } from "@/src/lib/supabase";
 import { toast } from "../components/ui/Toast";
 import { useConfirm } from "../hooks/useConfirm";
@@ -12,7 +26,7 @@ import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { usePermission } from "../hooks/usePermission";
 import { useAuditLog } from "../hooks/useAuditLog";
 import { useUndoDelete } from "../hooks/useUndoDelete";
-import { liveQuery } from "../lib/db";
+import { liveQuery, computeStatus } from "../lib/db";
 import type { AuditEntry } from "../hooks/useAuditLog";
 import { Shield, Download, Upload, RotateCcw, FileText, Clock, User } from "lucide-react";
 
@@ -184,6 +198,102 @@ export function Admin() {
     setAddingCategory(null);
     setNewItemName("");
     fetchItems();
+  };
+
+  // 점검 상태 판정 기준
+  const { rules, loadError: rulesLoadError } = useStatusRulesState();
+  const [draft, setDraft] = useState<StatusRules>(rules);
+  const [savingRules, setSavingRules] = useState(false);
+  const [recomputing, setRecomputing] = useState(false);
+
+  useEffect(() => {
+    setDraft(rules);
+  }, [rules]);
+
+  const rulesDirty = JSON.stringify(draft) !== JSON.stringify(rules);
+  const rulesError = validateStatusRules(draft);
+  const ruleSummary = describeStatusRules(draft);
+
+  const setRuleNumber = (key: Exclude<keyof StatusRules, "warningOnNotes">, value: string) => {
+    setDraft((d) => ({ ...d, [key]: value === "" ? 0 : Number(value) }));
+  };
+
+  const handleSaveRules = async () => {
+    const err = validateStatusRules(draft);
+    if (err) {
+      toast.error(err);
+      return;
+    }
+    setSavingRules(true);
+    try {
+      await saveStatusRules(draft);
+      const s = describeStatusRules(draft);
+      await log(
+        "UPDATE",
+        "sc_settings",
+        STATUS_RULES_KEY,
+        `상태 판정 기준 변경 — 긴급: ${s.urgent.join(", ") || "없음"} / 주의: ${s.warning.join(", ") || "없음"}`
+      );
+      toast.success("판정 기준을 저장했습니다. 이미 입력된 기록에 적용하려면 '기존 데이터 재판정'을 실행하세요.");
+    } catch (e) {
+      toast.error(`저장 실패: ${e instanceof Error ? e.message : "sc_settings 테이블을 확인해주세요."}`);
+    } finally {
+      setSavingRules(false);
+    }
+  };
+
+  /** 저장된 기준으로 기존 sc_records의 상태를 다시 계산해 달라진 건만 갱신 */
+  const handleRecompute = async () => {
+    setRecomputing(true);
+    try {
+      const { data, error } = await supabase
+        .from("sc_records")
+        .select("id,lights,water,recycle,focus,notes,status");
+      if (error) throw error;
+      const rows = (data ?? []) as Array<{
+        id: string; lights: number; water: number; recycle: number; focus: number;
+        notes: string | null; status: string | null;
+      }>;
+      const changes = rows
+        .map((r) => ({
+          id: r.id,
+          from: r.status ?? "",
+          to: computeStatus(
+            { lights: r.lights || 0, water: r.water || 0, recycle: r.recycle || 0, focus: r.focus || 0 },
+            r.notes || "",
+            rules
+          ),
+        }))
+        .filter((c) => c.to !== c.from);
+
+      if (changes.length === 0) {
+        toast.success(`전체 ${rows.length}건 모두 현재 기준과 일치합니다.`);
+        return;
+      }
+      const count = (s: string) => changes.filter((c) => c.to === s).length;
+      const ok = await confirm(
+        "기존 데이터 재판정",
+        `전체 ${rows.length}건 중 ${changes.length}건의 상태가 바뀝니다. (정상 ${count("정상")}건 · 주의 ${count("주의")}건 · 긴급 ${count("긴급")}건으로 변경) 진행할까요?`
+      );
+      if (!ok) return;
+
+      const now = new Date().toISOString();
+      for (let i = 0; i < changes.length; i += 20) {
+        const results = await Promise.all(
+          changes.slice(i, i + 20).map((c) =>
+            supabase.from("sc_records").update({ status: c.to, updated_at: now }).eq("id", c.id)
+          )
+        );
+        const failed = results.find((r) => r.error);
+        if (failed?.error) throw failed.error;
+      }
+      await log("UPDATE", "sc_records", "recompute_status", `상태 재판정: ${changes.length}건 변경 (전체 ${rows.length}건)`);
+      toast.success(`${changes.length}건의 상태를 다시 판정했습니다.`);
+    } catch (e) {
+      toast.error(`재판정 실패: ${e instanceof Error ? e.message : "알 수 없는 오류"}`);
+    } finally {
+      setRecomputing(false);
+    }
   };
 
   // 감사 로그
@@ -528,6 +638,128 @@ export function Admin() {
                 })}
               </div>
             )}
+          </CardContent>
+        </Card>
+
+        {/* 점검 상태 판정 기준 */}
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <span>🚦</span> <span>점검 상태 판정 기준</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <p className="text-xs text-surface-500">
+              점검표를 입력하면 항목 점수(1 아주못함 ~ {MAX_ITEM_SCORE} 아주잘함, 총점 최대 {MAX_TOTAL_SCORE}점)에 따라
+              정상·주의·긴급이 자동으로 정해집니다. 숫자를 0으로 두면 해당 조건은 사용하지 않습니다.
+            </p>
+
+            {rulesLoadError && (
+              <Alert variant="warning">
+                <p className="font-medium">설정 테이블(sc_settings)을 불러오지 못해 기본 기준으로 동작 중입니다.</p>
+                <p className="text-xs mt-1">
+                  Supabase SQL Editor에서 아래 SQL을 한 번 실행하면 기준을 저장할 수 있습니다.
+                </p>
+                <pre className="mt-2 text-left text-xs bg-white/70 border border-warning-200 rounded-lg p-3 overflow-x-auto">
+                  {SETTINGS_TABLE_SQL}
+                </pre>
+              </Alert>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="rounded-xl border border-danger-200 bg-danger-50/50 p-4 space-y-3">
+                <p className="text-sm font-semibold text-danger-700">🚨 긴급 — 아래 중 하나라도 해당하면</p>
+                {([
+                  { key: "urgentTotalBelow", label: "총점", suffix: "점 미만", max: MAX_TOTAL_SCORE },
+                  { key: "urgentLightsAtMost", label: "조명/전열", suffix: "점 이하", max: MAX_ITEM_SCORE },
+                  { key: "urgentWaterAtMost", label: "수돗물", suffix: "점 이하", max: MAX_ITEM_SCORE },
+                ] as const).map((f) => (
+                  <label key={f.key} className="flex items-center gap-2 text-sm text-surface-700">
+                    <span className="w-20 shrink-0">{f.label}</span>
+                    <div className="w-20">
+                      <Input
+                        type="number"
+                        min={0}
+                        max={f.max}
+                        value={draft[f.key]}
+                        disabled={!canAdmin}
+                        onChange={(e) => setRuleNumber(f.key, e.target.value)}
+                        className="text-center"
+                      />
+                    </div>
+                    <span>{f.suffix}</span>
+                  </label>
+                ))}
+              </div>
+
+              <div className="rounded-xl border border-warning-200 bg-warning-50/50 p-4 space-y-3">
+                <p className="text-sm font-semibold text-warning-700">⚠️ 주의 — 긴급이 아니면서 아래 중 하나라도 해당하면</p>
+                <label className="flex items-center gap-2 text-sm text-surface-700">
+                  <span className="w-20 shrink-0">총점</span>
+                  <div className="w-20">
+                    <Input
+                      type="number"
+                      min={0}
+                      max={MAX_TOTAL_SCORE}
+                      value={draft.warningTotalBelow}
+                      disabled={!canAdmin}
+                      onChange={(e) => setRuleNumber("warningTotalBelow", e.target.value)}
+                      className="text-center"
+                    />
+                  </div>
+                  <span>점 미만</span>
+                </label>
+                <Switch
+                  checked={draft.warningOnNotes}
+                  disabled={!canAdmin}
+                  onChange={(e) => setDraft((d) => ({ ...d, warningOnNotes: e.target.checked }))}
+                  label="특이사항이 입력되면 주의"
+                />
+              </div>
+            </div>
+
+            <div className="rounded-lg bg-surface-50 border border-surface-200 p-3 text-sm text-surface-700 space-y-1">
+              <p>
+                <span className="font-semibold text-danger-600">긴급</span> : {ruleSummary.urgent.join(" · ") || "해당 조건 없음"}
+              </p>
+              <p>
+                <span className="font-semibold text-warning-600">주의</span> : {ruleSummary.warning.join(" · ") || "해당 조건 없음"}
+              </p>
+              <p>
+                <span className="font-semibold text-success-600">정상</span> : 위 어디에도 해당하지 않을 때
+              </p>
+            </div>
+
+            {rulesError && <Alert variant="error">{rulesError}</Alert>}
+
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-xs text-surface-500">
+                {rulesDirty
+                  ? "저장하지 않은 변경 사항이 있습니다."
+                  : "기준을 바꿔도 이미 입력된 기록은 그대로입니다. 필요하면 '기존 데이터 재판정'을 실행하세요."}
+              </p>
+              <div className="flex gap-2">
+                <Button variant="ghost" size="md" onClick={() => setDraft(DEFAULT_STATUS_RULES)} disabled={!canAdmin}>
+                  기본값으로
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="md"
+                  onClick={handleRecompute}
+                  disabled={!canAdmin || rulesDirty || recomputing || rulesLoadError}
+                >
+                  {recomputing ? "재판정 중..." : "기존 데이터 재판정"}
+                </Button>
+                <Button
+                  variant="primary"
+                  size="md"
+                  onClick={handleSaveRules}
+                  disabled={!canAdmin || !rulesDirty || !!rulesError || savingRules || rulesLoadError}
+                >
+                  {savingRules ? "저장 중..." : "저장"}
+                </Button>
+              </div>
+            </div>
           </CardContent>
         </Card>
 

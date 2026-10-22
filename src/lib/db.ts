@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { getStatusRules, type StatusRules } from './statusRules';
 
 /**
  * Firestore onSnapshot 을 대체하는 경량 실시간 구독 헬퍼.
@@ -101,13 +102,25 @@ export function rowToRecord(r: RecordRow): AppRecord {
   };
 }
 
-/** 점검 점수 → 상태 판정 (기존 3곳에 흩어져 있던 로직을 한 곳으로 통합) */
+/**
+ * 점검 점수 → 상태 판정 (기존 3곳에 흩어져 있던 로직을 한 곳으로 통합)
+ * 기준값은 시스템 설정(sc_settings)에서 관리하며, 지정하지 않으면 현재 저장된 기준을 쓴다.
+ */
 export function computeStatus(
   scores: { lights: number; water: number; recycle: number; focus: number },
-  notes: string
+  notes: string,
+  rules: StatusRules = getStatusRules()
 ): '정상' | '주의' | '긴급' {
   const total = (scores.lights || 0) + (scores.water || 0) + (scores.recycle || 0) + (scores.focus || 0);
-  if (total < 12 || scores.lights <= 2 || scores.water <= 2) return '긴급';
-  if (total < 15 || (notes && notes.trim().length > 1)) return '주의';
+  if (
+    total < rules.urgentTotalBelow ||
+    (rules.urgentLightsAtMost > 0 && scores.lights <= rules.urgentLightsAtMost) ||
+    (rules.urgentWaterAtMost > 0 && scores.water <= rules.urgentWaterAtMost)
+  ) {
+    return '긴급';
+  }
+  if (total < rules.warningTotalBelow || (rules.warningOnNotes && notes && notes.trim().length > 1)) {
+    return '주의';
+  }
   return '정상';
 }

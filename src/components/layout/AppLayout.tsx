@@ -6,10 +6,12 @@ import { PageTransition } from "./PageTransition";
 import { useState, useEffect } from "react";
 import { CommandPalette } from "@/src/components/ui/CommandPalette";
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
+import { useStatusRulesSync } from "@/src/hooks/useStatusRulesSync";
 
 export function AppLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { departments, buildings } = useOrganization();
+  useStatusRulesSync();
   const [cmdOpen, setCmdOpen] = useState(false);
 
   useEffect(() => {
