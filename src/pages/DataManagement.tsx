@@ -592,7 +592,7 @@ export function DataManagement() {
             {periodFilter}
             <button
               onClick={exportRawCSV}
-              className="flex items-center gap-2 px-4 py-2.5 bg-white border border-surface-300 hover:bg-surface-50 text-surface-700 text-sm font-medium rounded-lg transition-colors min-h-[44px]"
+              className="flex items-center gap-2 shrink-0 whitespace-nowrap px-4 py-2.5 bg-white border border-surface-300 hover:bg-surface-50 text-surface-700 text-sm font-medium rounded-lg transition-colors min-h-[44px]"
             >
               <Download className="w-4 h-4" />
               CSV 내보내기
@@ -821,7 +821,7 @@ export function DataManagement() {
             <button
               onClick={exportReportCSV}
               disabled={reportData.summary.count === 0 && coverage.missingCount === 0}
-              className="flex items-center gap-2 px-4 py-2.5 bg-white border border-surface-300 hover:bg-surface-50 text-surface-700 text-sm font-medium rounded-lg transition-colors min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 shrink-0 whitespace-nowrap px-4 py-2.5 bg-white border border-surface-300 hover:bg-surface-50 text-surface-700 text-sm font-medium rounded-lg transition-colors min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Download className="w-4 h-4" />
               CSV 내보내기
@@ -989,7 +989,7 @@ export function DataManagement() {
             </div>
             <button
               onClick={exportAggregateCSV}
-              className="flex items-center gap-2 px-4 py-2.5 bg-white border border-surface-300 hover:bg-surface-50 text-surface-700 text-sm font-medium rounded-lg transition-colors min-h-[44px]"
+              className="flex items-center gap-2 shrink-0 whitespace-nowrap px-4 py-2.5 bg-white border border-surface-300 hover:bg-surface-50 text-surface-700 text-sm font-medium rounded-lg transition-colors min-h-[44px]"
             >
               <Download className="w-4 h-4" />
               CSV 내보내기

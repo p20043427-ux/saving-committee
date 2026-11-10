@@ -71,7 +71,7 @@ export function DatePickerWithData({ selectedDate, onDateChange }: DatePickerWit
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "flex items-center space-x-2 px-4 py-2 border border-surface-300 rounded-lg text-sm bg-white hover:bg-surface-50 focus:ring-2 focus:ring-primary-500 outline-none text-surface-700 font-medium transition-colors w-full sm:w-auto min-w-[140px] flex-shrink-0"
+          "flex items-center space-x-2 px-4 py-2.5 min-h-[44px] border border-surface-300 rounded-lg text-sm bg-white hover:bg-surface-50 focus:ring-2 focus:ring-primary-500 outline-none text-surface-700 font-medium transition-colors w-full sm:w-auto min-w-[140px] flex-shrink-0"
         )}
       >
         <CalendarIcon className="w-4 h-4 text-surface-500 flex-shrink-0" />

@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/src/components/ui/Card";
 import { PageHeader } from "@/src/components/ui/PageHeader";
+import { Input, Select } from "@/src/components/ui/Input";
 import { useInspectionItemNames } from "@/src/hooks/useInspectionItemNames";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { supabase } from "@/src/lib/supabase";
@@ -205,36 +206,40 @@ export function YearlyReport() {
           subtitle="지정된 기간 내의 점검 데이터와 병원 전체 평균을 비교합니다."
           action={
             <div className="flex flex-wrap items-center gap-2 bg-surface-50 p-2 rounded-lg border border-surface-200">
-              <select
+              <Select
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value as "month" | "range")}
-                className="bg-white border border-surface-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
+                className="sm:w-32"
+                aria-label="조회 방식"
               >
                 <option value="month">월별 조회</option>
                 <option value="range">기간 조회</option>
-              </select>
+              </Select>
 
               {filterType === "month" ? (
-                <input
+                <Input
                   type="month"
                   value={filterMonth}
                   onChange={(e) => setFilterMonth(e.target.value)}
-                  className="bg-white border border-surface-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
+                  className="sm:w-44"
+                  aria-label="조회 월"
                 />
               ) : (
-                <div className="flex items-center gap-1">
-                  <input
+                <div className="flex items-center gap-2">
+                  <Input
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="bg-white border border-surface-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 w-32"
+                    className="sm:w-40"
+                    aria-label="시작일"
                   />
                   <span className="text-surface-400">~</span>
-                  <input
+                  <Input
                     type="date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="bg-white border border-surface-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 w-32"
+                    className="sm:w-40"
+                    aria-label="종료일"
                   />
                 </div>
               )}
@@ -283,16 +288,17 @@ export function YearlyReport() {
         <Card className="lg:col-span-2 shadow-gh-sm border-surface-200">
           <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between">
             <CardTitle>기간 내 점검일별 총점 추이</CardTitle>
-            <select 
-              className="rounded-lg border border-surface-300 px-4 py-1.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none bg-white font-medium"
+            <Select
+              className="sm:w-56 font-medium"
               value={selectedDept}
               onChange={(e) => setSelectedDept(e.target.value)}
+              aria-label="비교할 부서"
             >
               <option value="">비교할 부서 선택</option>
               {departments.map(d => (
                 <option key={d.id} value={d.id}>{d.name}</option>
               ))}
-            </select>
+            </Select>
           </CardHeader>
           <CardContent className="h-[350px]">
             {periodData.length > 0 ? (

@@ -4,6 +4,8 @@ import { liveQuery } from "@/src/lib/db";
 import { CommitteeMember } from "./Committee";
 import { PageHeader } from "../components/ui/PageHeader";
 import { Empty } from "../components/ui/Empty";
+import { Button } from "../components/ui/Button";
+import { Input, Select } from "../components/ui/Input";
 import { toast } from "../components/ui/Toast";
 
 interface InspectionSchedule {
@@ -189,18 +191,16 @@ export function Schedule() {
         subtitle="월별 점검 1차, 2차 스케줄과 배정 인원을 관리합니다."
         action={
           <>
-            <input
+            <Input
               type="month"
               value={filterMonth}
               onChange={(e) => setFilterMonth(e.target.value)}
-              className="rounded-lg border-surface-300 text-surface-900 font-semibold focus:ring-primary-500 focus:border-primary-500"
+              className="sm:w-44 font-semibold"
+              aria-label="조회 월"
             />
-            <button
-              onClick={() => setIsFormOpen(true)}
-              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium transition-colors whitespace-nowrap"
-            >
+            <Button variant="primary" size="md" onClick={() => setIsFormOpen(true)} className="whitespace-nowrap">
               + 스케줄 추가
-            </button>
+            </Button>
           </>
         }
       />
@@ -212,24 +212,22 @@ export function Schedule() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-surface-700 mb-1">점검 일자</label>
-                <input
+                <Input
                   type="date"
                   value={formData.date}
                   onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                  className="w-full rounded-md border border-surface-300 px-3 py-2 text-surface-900 focus:border-primary-500"
                   required
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-surface-700 mb-1">구분</label>
-                <select
+                <Select
                   value={formData.turn}
                   onChange={(e) => setFormData({ ...formData, turn: Number(e.target.value) as 1 | 2 })}
-                  className="w-full rounded-md border border-surface-300 px-3 py-2 text-surface-900 focus:border-primary-500"
                 >
                   <option value={1}>1차 점검</option>
                   <option value={2}>2차 점검</option>
-                </select>
+                </Select>
               </div>
               
               <div className="md:col-span-2">
@@ -242,7 +240,7 @@ export function Schedule() {
                         key={member.id}
                         type="button"
                         onClick={() => toggleInspector(member.name)}
-                        className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
+                        className={`px-4 py-2 min-h-[44px] text-sm rounded-full border transition-colors ${
                           isSelected 
                             ? 'bg-primary-100 border-primary-500 text-primary-800 font-medium' 
                             : 'bg-white border-surface-300 text-surface-600 hover:bg-surface-50'
@@ -260,30 +258,22 @@ export function Schedule() {
 
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-surface-700 mb-1">비고 (특이사항)</label>
-                <input
+                <Input
                   type="text"
                   value={formData.note}
                   onChange={(e) => setFormData({ ...formData, note: e.target.value })}
-                  className="w-full rounded-md border border-surface-300 px-3 py-2 text-surface-900 focus:border-primary-500"
                   placeholder="예: 시간 변동 등 안내사항"
                 />
               </div>
             </div>
-            
+
             <div className="flex justify-end gap-2 pt-4">
-              <button
-                type="button"
-                onClick={resetForm}
-                className="px-4 py-2 text-surface-600 bg-surface-100 hover:bg-surface-200 rounded-md font-medium transition-colors"
-              >
+              <Button type="button" variant="ghost" size="md" onClick={resetForm}>
                 취소
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-md font-medium transition-colors"
-              >
+              </Button>
+              <Button type="submit" variant="primary" size="md">
                 {editingId ? "수정완료" : "추가완료"}
-              </button>
+              </Button>
             </div>
           </form>
         </div>
@@ -328,33 +318,21 @@ export function Schedule() {
                   {deletingId === sched.id ? (
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-danger-600 font-medium">정말 삭제할까요?</span>
-                      <button
-                        onClick={() => handleDelete(sched.id)}
-                        className="px-3 py-1.5 text-white bg-danger-600 rounded-md text-sm hover:bg-danger-700 font-medium transition-colors"
-                      >
+                      <Button variant="dangerSolid" onClick={() => handleDelete(sched.id)} className="whitespace-nowrap">
                         네, 삭제
-                      </button>
-                      <button
-                        onClick={() => setDeletingId(null)}
-                        className="px-3 py-1.5 text-surface-600 bg-surface-100 rounded-md text-sm hover:bg-surface-200 font-medium transition-colors"
-                      >
+                      </Button>
+                      <Button variant="ghost" onClick={() => setDeletingId(null)} className="whitespace-nowrap">
                         취소
-                      </button>
+                      </Button>
                     </div>
                   ) : (
                     <>
-                      <button
-                        onClick={() => handleEdit(sched)}
-                        className="px-3 py-1.5 text-surface-600 bg-white border border-surface-200 rounded-md text-sm hover:bg-surface-50 font-medium transition-colors"
-                      >
+                      <Button variant="secondary" onClick={() => handleEdit(sched)} className="whitespace-nowrap">
                         수정
-                      </button>
-                      <button
-                        onClick={() => setDeletingId(sched.id)}
-                        className="px-3 py-1.5 text-danger-600 bg-white border border-surface-200 rounded-md text-sm hover:bg-danger-50 font-medium transition-colors"
-                      >
+                      </Button>
+                      <Button variant="danger" onClick={() => setDeletingId(sched.id)} className="bg-white whitespace-nowrap">
                         삭제
-                      </button>
+                      </Button>
                     </>
                   )}
                 </div>

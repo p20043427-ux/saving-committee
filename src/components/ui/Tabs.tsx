@@ -15,12 +15,12 @@ interface TabsProps {
 
 export function Tabs({ items, active, onChange }: TabsProps) {
   return (
-    <div className="flex space-x-1 border-b border-surface-200">
+    <div className="flex space-x-1 border-b border-surface-200 overflow-x-auto">
       {items.map(item => (
         <button
           key={item.key}
           onClick={() => onChange(item.key)}
-          className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors min-h-[44px] ${
+          className={`flex items-center gap-2 shrink-0 whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 transition-colors min-h-[44px] ${
             active === item.key
               ? "border-primary-500 text-primary-600"
               : "border-transparent text-surface-500 hover:text-surface-700 hover:border-surface-300"

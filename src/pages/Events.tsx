@@ -6,6 +6,8 @@ import { PageHeader } from "../components/ui/PageHeader";
 import { Tabs } from "../components/ui/Tabs";
 import { TableCard } from "../components/ui/TableCard";
 import { Empty } from "../components/ui/Empty";
+import { Button } from "../components/ui/Button";
+import { Input, Select, Textarea } from "../components/ui/Input";
 import { toast } from "../components/ui/Toast";
 
 interface CommitteeEvent {
@@ -211,30 +213,29 @@ export function Events() {
         action={
           <>
             {activeTab === "monthly" ? (
-              <input
+              <Input
                 type="month"
                 value={filterMonth}
                 onChange={(e) => setFilterMonth(e.target.value)}
-                className="rounded-lg border-surface-300 text-surface-900 font-semibold focus:ring-primary-500 focus:border-primary-500"
+                className="sm:w-44 font-semibold"
+                aria-label="조회 월"
               />
             ) : (
-              <select
+              <Select
                 value={filterYear}
                 onChange={(e) => setFilterYear(e.target.value)}
-                className="rounded-lg border-surface-300 text-surface-900 font-semibold focus:ring-primary-500 focus:border-primary-500"
+                className="sm:w-32 font-semibold"
+                aria-label="조회 연도"
               >
                 {Array.from({ length: 5 }).map((_, i) => {
                   const y = (new Date().getFullYear() - 2 + i).toString();
                   return <option key={y} value={y}>{y}년</option>;
                 })}
-              </select>
+              </Select>
             )}
-            <button
-              onClick={() => setIsFormOpen(true)}
-              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium transition-colors whitespace-nowrap"
-            >
+            <Button variant="primary" size="md" onClick={() => setIsFormOpen(true)} className="whitespace-nowrap">
               + 행사 기록
-            </button>
+            </Button>
           </>
         }
       />
@@ -256,32 +257,30 @@ export function Events() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-surface-700 mb-1">행사 일자</label>
-                <input
+                <Input
                   type="date"
                   value={formData.date}
                   onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                  className="w-full rounded-md border border-surface-300 px-3 py-2 text-surface-900 focus:border-primary-500"
                   required
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-surface-700 mb-1">행사명</label>
-                <input
+                <Input
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full rounded-md border border-surface-300 px-3 py-2 text-surface-900 focus:border-primary-500"
                   placeholder="예: 정기 회의, 캠페인 등"
                   required
                 />
               </div>
-              
+
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-surface-700 mb-1">상세 내용</label>
-                <textarea
+                <Textarea
+                  rows={4}
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full rounded-md border border-surface-300 px-3 py-2 text-surface-900 focus:border-primary-500 h-24 resize-none"
                   placeholder="행사 및 회의 내용을 간략히 기록합니다."
                 />
               </div>
@@ -296,7 +295,7 @@ export function Events() {
                         key={member.id}
                         type="button"
                         onClick={() => toggleAttendee(member.name)}
-                        className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
+                        className={`px-4 py-2 min-h-[44px] text-sm rounded-full border transition-colors ${
                           isSelected 
                             ? 'bg-primary-100 border-primary-500 text-primary-800 font-medium' 
                             : 'bg-white border-surface-300 text-surface-600 hover:bg-surface-50'
@@ -314,19 +313,12 @@ export function Events() {
             </div>
             
             <div className="flex justify-end gap-2 pt-4 border-t border-surface-100 mt-4">
-              <button
-                type="button"
-                onClick={resetForm}
-                className="px-4 py-2 text-surface-600 bg-surface-100 hover:bg-surface-200 rounded-md font-medium transition-colors"
-              >
+              <Button type="button" variant="ghost" size="md" onClick={resetForm}>
                 취소
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-md font-medium transition-colors"
-              >
+              </Button>
+              <Button type="submit" variant="primary" size="md">
                 {editingId ? "수정완료" : "저장완료"}
-              </button>
+              </Button>
             </div>
           </form>
         </div>
@@ -377,33 +369,21 @@ export function Events() {
                   {deletingId === eventRecord.id ? (
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-danger-600 font-medium whitespace-nowrap">삭제할까요?</span>
-                      <button
-                        onClick={() => handleDelete(eventRecord.id)}
-                        className="px-3 py-1.5 text-white bg-danger-600 rounded-md text-sm hover:bg-danger-700 font-medium transition-colors whitespace-nowrap"
-                      >
+                      <Button variant="dangerSolid" onClick={() => handleDelete(eventRecord.id)} className="whitespace-nowrap">
                         네
-                      </button>
-                      <button
-                        onClick={() => setDeletingId(null)}
-                        className="px-3 py-1.5 text-surface-600 bg-surface-100 rounded-md text-sm hover:bg-surface-200 font-medium transition-colors whitespace-nowrap"
-                      >
+                      </Button>
+                      <Button variant="ghost" onClick={() => setDeletingId(null)} className="whitespace-nowrap">
                         아니요
-                      </button>
+                      </Button>
                     </div>
                   ) : (
                     <>
-                      <button
-                        onClick={() => handleEdit(eventRecord)}
-                        className="px-3 py-1.5 text-surface-600 bg-white border border-surface-200 rounded-md text-sm hover:bg-surface-50 font-medium transition-colors whitespace-nowrap"
-                      >
+                      <Button variant="secondary" onClick={() => handleEdit(eventRecord)} className="whitespace-nowrap">
                         수정
-                      </button>
-                      <button
-                        onClick={() => setDeletingId(eventRecord.id)}
-                        className="px-3 py-1.5 text-danger-600 bg-white border border-surface-200 rounded-md text-sm hover:bg-danger-50 font-medium transition-colors whitespace-nowrap"
-                      >
+                      </Button>
+                      <Button variant="danger" onClick={() => setDeletingId(eventRecord.id)} className="bg-white whitespace-nowrap">
                         삭제
-                      </button>
+                      </Button>
                     </>
                   )}
                 </div>

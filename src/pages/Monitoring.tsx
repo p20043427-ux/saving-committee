@@ -9,6 +9,8 @@ import { DatePickerWithData } from "@/src/components/features/DatePickerWithData
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
 import { toast } from "../components/ui/Toast";
 import { PageHeader } from "../components/ui/PageHeader";
+import { Button } from "../components/ui/Button";
+import { Select } from "../components/ui/Input";
 import { Printer } from "lucide-react";
 
 interface RecordData {
@@ -224,33 +226,37 @@ export function Monitoring() {
         subtitle="이전 기록 조회 및 해당 일자 점검표를 개별 입력합니다."
         action={
           <div className="flex items-center space-x-2 w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0 scrollbar-hide -mx-2 px-2 sm:mx-0 sm:px-0 no-print">
-             <button
+             <Button
                type="button"
+               variant="ghost"
                onClick={() => window.print()}
-               className="flex-shrink-0 px-3 py-2 bg-surface-100 border border-surface-300 text-surface-700 font-medium rounded-lg text-sm hover:bg-surface-200 transition-colors focus:ring-2 focus:ring-primary-500 outline-none flex items-center gap-1.5"
+               className="flex-shrink-0"
+               aria-label="인쇄"
              >
                <Printer size={14} />
                <span className="hidden sm:inline">인쇄</span>
-             </button>
-             <button
+             </Button>
+             <Button
                type="button"
+               variant="ghost"
                onClick={exportToCSV}
                disabled={isExporting}
-               className="flex-shrink-0 px-4 py-2 bg-surface-100 border border-surface-300 text-surface-700 font-medium rounded-lg text-sm hover:bg-surface-200 transition-colors focus:ring-2 focus:ring-primary-500 outline-none flex items-center space-x-1"
+               className="flex-shrink-0 whitespace-nowrap"
              >
                <span>⬇️</span>
                <span>{isExporting ? "추출 중..." : "CSV 내보내기"}</span>
-             </button>
-             <select
-               className="flex-shrink-0 w-32 sm:w-auto px-4 py-2 border border-surface-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-primary-500 outline-none text-surface-700 font-medium whitespace-nowrap"
+             </Button>
+             <Select
+               className="flex-shrink-0 w-44 sm:w-48 whitespace-nowrap font-medium"
                value={globalInspector}
                onChange={(e) => setGlobalInspector(e.target.value)}
+               aria-label="점검자"
              >
                <option value="">점검자 성명 (선택)</option>
                {members.map(m => (
                  <option key={m.id} value={m.name}>{m.name}</option>
                ))}
-             </select>
+             </Select>
              <DatePickerWithData
                selectedDate={selectedDate}
                onDateChange={setSelectedDate}
@@ -301,7 +307,7 @@ export function Monitoring() {
               <button
                 key={b.id}
                 onClick={() => setMobileActiveBuildingId(b.id)}
-                className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                className={`flex-shrink-0 px-4 py-2 min-h-[44px] rounded-full text-sm font-medium transition-colors ${
                   mobileActiveBuildingId === b.id 
                     ? 'bg-surface-900 text-white shadow-gh-sm' 
                     : 'bg-white border border-surface-200 text-surface-600 hover:bg-surface-50'

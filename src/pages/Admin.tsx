@@ -499,12 +499,13 @@ export function Admin() {
                   {editingBuildingId === b.id ? (
                     <>
                       <span className="text-xs font-mono text-surface-400 w-12 shrink-0">{b.id}</span>
-                      <input
+                      <Input
                         autoFocus
                         value={editingBuildingName}
                         onChange={(e) => setEditingBuildingName(e.target.value)}
                         onKeyDown={(e) => { if (e.key === "Enter") saveEditBuilding(b.id); if (e.key === "Escape") setEditingBuildingId(null); }}
-                        className="flex-1 px-2 py-1 text-sm border border-primary-300 rounded focus:outline-none focus:ring-1 focus:ring-primary-500"
+                        className="flex-1 min-w-0"
+                        aria-label="건물명"
                       />
                       <Button variant="primary" onClick={() => saveEditBuilding(b.id)}>저장</Button>
                       <Button variant="secondary" onClick={() => setEditingBuildingId(null)}>취소</Button>
@@ -517,7 +518,7 @@ export function Admin() {
                       </div>
                       {canAdmin && (
                         <>
-                          <button onClick={() => startEditBuilding(b.id, b.name)} className="text-xs text-primary-600 hover:text-primary-800 font-medium">수정</button>
+                          <Button variant="secondary" onClick={() => startEditBuilding(b.id, b.name)}>수정</Button>
                           <Button variant="danger" onClick={() => handleDeleteBuilding(b.id, b.name)}>삭제</Button>
                         </>
                       )}
@@ -528,19 +529,22 @@ export function Admin() {
 
               {canAdmin && (addingBuilding ? (
                 <div className="flex items-center gap-2 p-3 border border-primary-200 rounded-lg bg-primary-50">
-                  <input
-                    autoFocus
-                    value={newBuildingId}
-                    onChange={(e) => setNewBuildingId(e.target.value)}
-                    placeholder="코드 (예: B04)"
-                    className="w-24 px-2 py-1 text-sm border border-primary-300 rounded focus:outline-none focus:ring-1 focus:ring-primary-500 bg-white"
-                  />
-                  <input
+                  <div className="w-24 shrink-0">
+                    <Input
+                      autoFocus
+                      value={newBuildingId}
+                      onChange={(e) => setNewBuildingId(e.target.value)}
+                      placeholder="코드 (B04)"
+                      aria-label="건물 코드"
+                    />
+                  </div>
+                  <Input
                     value={newBuildingName}
                     onChange={(e) => setNewBuildingName(e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter") saveNewBuilding(); if (e.key === "Escape") setAddingBuilding(false); }}
                     placeholder="건물명 (예: 암센터)"
-                    className="flex-1 px-2 py-1 text-sm border border-primary-300 rounded focus:outline-none focus:ring-1 focus:ring-primary-500 bg-white"
+                    className="flex-1 min-w-0"
+                    aria-label="건물명"
                   />
                   <Button variant="primary" onClick={saveNewBuilding}>추가</Button>
                   <Button variant="secondary" onClick={() => setAddingBuilding(false)}>취소</Button>
@@ -548,7 +552,7 @@ export function Admin() {
               ) : (
                 <button
                   onClick={() => { setAddingBuilding(true); setEditingBuildingId(null); }}
-                  className="w-full py-2 border-2 border-dashed border-surface-300 text-surface-500 rounded-lg text-sm font-medium hover:border-primary-400 hover:text-primary-600 transition-colors"
+                  className="w-full py-2.5 min-h-[44px] border-2 border-dashed border-surface-300 text-surface-500 rounded-lg text-sm font-medium hover:border-primary-400 hover:text-primary-600 transition-colors"
                 >
                   + 신규 건물 등록
                 </button>
@@ -583,12 +587,9 @@ export function Admin() {
                           {category} ({catItems.length}개)
                         </span>
                         {canAdmin && (
-                          <button
-                            onClick={() => startAddItem(category)}
-                            className="text-xs text-primary-600 hover:text-primary-800 font-medium"
-                          >
+                          <Button variant="secondary" onClick={() => startAddItem(category)}>
                             + 항목 추가
-                          </button>
+                          </Button>
                         )}
                       </div>
 
@@ -597,12 +598,13 @@ export function Admin() {
                           <div key={item.id} className="flex items-center gap-2 px-2 py-1.5 bg-surface-50 rounded-lg border border-surface-100">
                             {editingItemId === item.id ? (
                               <>
-                                <input
+                                <Input
                                   autoFocus
                                   value={editingItemName}
                                   onChange={(e) => setEditingItemName(e.target.value)}
                                   onKeyDown={(e) => { if (e.key === "Enter") saveEditItem(item.id, item.name); if (e.key === "Escape") setEditingItemId(null); }}
-                                  className="flex-1 px-2 py-0.5 text-sm border border-primary-300 rounded focus:outline-none focus:ring-1 focus:ring-primary-500"
+                                  className="flex-1 min-w-0"
+                                  aria-label="항목명"
                                 />
                                 <Button variant="primary" onClick={() => saveEditItem(item.id, item.name)}>저장</Button>
                                 <Button variant="secondary" onClick={() => setEditingItemId(null)}>취소</Button>
@@ -612,7 +614,7 @@ export function Admin() {
                                 <span className="flex-1 text-sm text-surface-800">{item.name}</span>
                                 {canAdmin && (
                                   <>
-                                    <button onClick={() => startEditItem(item)} className="text-xs text-primary-600 hover:text-primary-800">수정</button>
+                                    <Button variant="secondary" onClick={() => startEditItem(item)}>수정</Button>
                                     <Button variant="danger" onClick={() => deleteItem(item.id, item.name)}>삭제</Button>
                                   </>
                                 )}
@@ -627,13 +629,14 @@ export function Admin() {
 
                         {addingCategory === category && (
                           <div className="flex items-center gap-2 px-2 py-1.5 bg-primary-50 rounded-lg border border-primary-200">
-                            <input
+                            <Input
                               autoFocus
                               value={newItemName}
                               onChange={(e) => setNewItemName(e.target.value)}
                               onKeyDown={(e) => { if (e.key === "Enter") saveNewItem(category); if (e.key === "Escape") setAddingCategory(null); }}
                               placeholder="항목명 입력"
-                              className="flex-1 px-2 py-0.5 text-sm border border-primary-300 rounded focus:outline-none focus:ring-1 focus:ring-primary-500 bg-white"
+                              className="flex-1 min-w-0"
+                              aria-label="새 항목명"
                             />
                             <Button variant="primary" onClick={() => saveNewItem(category)}>추가</Button>
                             <Button variant="secondary" onClick={() => setAddingCategory(null)}>취소</Button>
@@ -745,7 +748,7 @@ export function Admin() {
                   ? "저장하지 않은 변경 사항이 있습니다."
                   : "기준을 바꿔도 이미 입력된 기록은 그대로입니다. 필요하면 '기존 데이터 재판정'을 실행하세요."}
               </p>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button variant="ghost" size="md" onClick={() => setDraft(DEFAULT_STATUS_RULES)} disabled={!canAdmin}>
                   기본값으로
                 </Button>

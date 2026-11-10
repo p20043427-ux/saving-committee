@@ -121,10 +121,10 @@ export function Management() {
                       <td className="px-4 py-3 font-mono text-surface-600">{b.id}</td>
                       <td className="px-4 py-3">
                         {editBuildingId === b.id ? (
-                          <input 
+                          <Input
                             value={editBuildingName}
                             onChange={(e) => setEditBuildingName(e.target.value)}
-                            className="w-full px-2 py-1 border border-surface-300 rounded text-sm outline-none focus:border-primary-500"
+                            aria-label="건물명"
                           />
                         ) : (
                           <span className="font-medium text-surface-900">{b.name}</span>
@@ -206,25 +206,25 @@ export function Management() {
                       <td className="px-4 py-3 font-mono text-surface-600">{d.id}</td>
                       <td className="px-4 py-3">
                         {editDeptId === d.id ? (
-                          <select 
+                          <Select
                             value={editDeptBld} onChange={(e) => setEditDeptBld(e.target.value)}
-                            className="w-full px-2 py-1 border border-surface-300 rounded text-sm"
+                            aria-label="소속 건물"
                           >
                             <option value="">선택</option>
                             {buildings.map(b => (
                               <option key={b.id} value={b.id}>{b.name}</option>
                             ))}
-                          </select>
+                          </Select>
                         ) : (
                           <span className="text-surface-700">{buildings.find(b => b.id === d.buildingId)?.name || d.buildingId}</span>
                         )}
                       </td>
                       <td className="px-4 py-3">
                         {editDeptId === d.id ? (
-                          <input 
+                          <Input
                             value={editDeptName}
                             onChange={(e) => setEditDeptName(e.target.value)}
-                            className="w-full px-2 py-1 border border-surface-300 rounded text-sm outline-none focus:border-primary-500"
+                            aria-label="부서명"
                           />
                         ) : (
                           <span className="font-medium text-surface-900">{d.name}</span>
