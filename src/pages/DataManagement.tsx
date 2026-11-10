@@ -5,7 +5,7 @@ import { RecordEditDialog } from "@/src/components/features/RecordEditDialog";
 import { useInspectionItemNames } from "@/src/hooks/useInspectionItemNames";
 import { useAuth } from "@/src/components/auth/AuthProvider";
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
-import { Download, CalendarDays, BarChart2, ArrowUp, ArrowDown } from "lucide-react";
+import { Download, CalendarDays, BarChart2, ArrowUp, ArrowDown, Users } from "lucide-react";
 import { toast } from "../components/ui/Toast";
 import { useConfirm } from "../hooks/useConfirm";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
@@ -37,6 +37,29 @@ export interface RecordDoc {
   createdAt: string;
 }
 
+/** 건물·입력자 리포트용 집계 한 칸 */
+interface ReportAgg {
+  count: number;
+  total: number;
+  normal: number;
+  warning: number;
+  urgent: number;
+  depts: Set<string>;
+}
+
+const newAgg = (): ReportAgg => ({ count: 0, total: 0, normal: 0, warning: 0, urgent: 0, depts: new Set() });
+
+function addToAgg(agg: ReportAgg, r: RecordDoc) {
+  agg.count += 1;
+  agg.total += r.totalScore || 0;
+  agg.depts.add(r.departmentId);
+  if (r.status === "긴급") agg.urgent += 1;
+  else if (r.status === "주의") agg.warning += 1;
+  else agg.normal += 1;
+}
+
+const avgOf = (agg: ReportAgg) => (agg.count > 0 ? Math.round((agg.total / agg.count) * 10) / 10 : null);
+
 export function DataManagement() {
   const { user } = useAuth();
   const { buildings, departments, isLoading: orgLoading } = useOrganization();
@@ -44,7 +67,7 @@ export function DataManagement() {
   const [isLoading, setIsLoading] = useState(true);
 
   // Tabs
-  const [activeTab, setActiveTab] = useState<"raw" | "aggregate">("raw");
+  const [activeTab, setActiveTab] = useState<"raw" | "aggregate" | "report">("raw");
 
   // Filter State (Raw)
   const currentYearMonth = new Date().toISOString().slice(0, 7);
@@ -59,6 +82,28 @@ export function DataManagement() {
 
   // Filter State (Aggregate)
   const [filterYear, setFilterYear] = useState(new Date().getFullYear().toString());
+
+  // Filter State (건물·부서 — 두 탭 공통, 빈 값은 전체)
+  const [filterBuilding, setFilterBuilding] = useState("");
+  const [filterDept, setFilterDept] = useState("");
+  const deptOptions = useMemo(
+    () => departments.filter((d) => !filterBuilding || d.buildingId === filterBuilding),
+    [departments, filterBuilding]
+  );
+  // 점검자 필터 (상세 점검 내역 탭, 빈 값은 전체)
+  const [filterInspector, setFilterInspector] = useState("");
+  const inspectorOptions = useMemo(() => {
+    const names = new Set(allRecords.map((r) => r.inspector).filter(Boolean));
+    if (filterInspector) names.add(filterInspector); // 기간을 바꿔도 선택값이 목록에서 사라지지 않게
+    return [...names].sort((a, b) => a.localeCompare(b, "ko"));
+  }, [allRecords, filterInspector]);
+  const matchesOrg = (buildingId: string, departmentId: string) =>
+    (!filterBuilding || buildingId === filterBuilding) && (!filterDept || departmentId === filterDept);
+  const handleBuildingFilter = (id: string) => {
+    setFilterBuilding(id);
+    // 선택된 부서가 새 건물 소속이 아니면 부서 필터 해제
+    if (filterDept && id && departments.find((d) => d.id === filterDept)?.buildingId !== id) setFilterDept("");
+  };
 
   // Pagination State (Raw)
   const [page, setPage] = useState(1);
@@ -155,24 +200,26 @@ export function DataManagement() {
   // 필터/페이지 변경 시 선택 초기화
   useEffect(() => {
     setSelectedIds(new Set());
-  }, [page, filterType, filterMonth, startDate, endDate]);
+  }, [page, filterType, filterMonth, startDate, endDate, filterBuilding, filterDept, filterInspector]);
 
   // 필터 변경 시 page 리셋
   useEffect(() => {
     setPage(1);
-  }, [filterType, filterMonth, startDate, endDate, rawSortConfig]);
+  }, [filterType, filterMonth, startDate, endDate, rawSortConfig, filterBuilding, filterDept, filterInspector]);
 
   const getBuildingName = (id: string) => buildings.find(b => b.id === id)?.name || id;
+
+  const inPeriod = (r: RecordDoc) => {
+    const d = r.date.split("T")[0];
+    return filterType === "month" ? d.startsWith(filterMonth) : d >= startDate && d <= endDate;
+  };
 
   // Computed: Display Records (Raw)
   const filteredRecords = useMemo(() => {
     let filtered = allRecords.filter(r => {
-      const d = r.date.split("T")[0];
-      if (filterType === "month") {
-        return d.startsWith(filterMonth);
-      } else {
-        return d >= startDate && d <= endDate;
-      }
+      if (!matchesOrg(r.buildingId, r.departmentId)) return false;
+      if (filterInspector && r.inspector !== filterInspector) return false;
+      return inPeriod(r);
     });
 
     if (rawSortConfig !== null) {
@@ -202,7 +249,7 @@ export function DataManagement() {
     }
 
     return filtered;
-  }, [allRecords, filterType, filterMonth, startDate, endDate, rawSortConfig, buildings]);
+  }, [allRecords, filterType, filterMonth, startDate, endDate, rawSortConfig, buildings, filterBuilding, filterDept, filterInspector]);
 
   const pagedRecords = filteredRecords.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   const totalPages = Math.ceil(filteredRecords.length / PAGE_SIZE);
@@ -212,11 +259,13 @@ export function DataManagement() {
     const deptStats: Record<string, { id: string, name: string, months: Record<number, {total: number, count: number}> }> = {};
     
     departments.forEach(d => {
+      if (!matchesOrg(d.buildingId, d.id)) return;
       deptStats[d.id] = { id: d.id, name: d.name, months: {} };
     });
-    
+
     allRecords.forEach(r => {
       if (!r.date.startsWith(filterYear)) return;
+      if (!matchesOrg(r.buildingId, r.departmentId)) return;
       if (!deptStats[r.departmentId]) {
         deptStats[r.departmentId] = { id: r.departmentId, name: r.departmentName, months: {} };
       }
@@ -271,9 +320,78 @@ export function DataManagement() {
     }
 
     return resultArr;
-  }, [allRecords, filterYear, departments, aggSortConfig]);
+  }, [allRecords, filterYear, departments, aggSortConfig, filterBuilding, filterDept]);
+
+  // Computed: 건물·입력자 리포트 (상세 내역과 같은 필터가 적용된 기록을 집계)
+  const reportData = useMemo(() => {
+    const summary = newAgg();
+    const byBuilding = new Map<string, ReportAgg>();
+    const byInspector = new Map<string, { buildingId: string; inspector: string; agg: ReportAgg }>();
+
+    filteredRecords.forEach((r) => {
+      addToAgg(summary, r);
+      if (!byBuilding.has(r.buildingId)) byBuilding.set(r.buildingId, newAgg());
+      addToAgg(byBuilding.get(r.buildingId)!, r);
+
+      const inspector = r.inspector || "(미지정)";
+      const key = `${r.buildingId}|${inspector}`;
+      if (!byInspector.has(key)) byInspector.set(key, { buildingId: r.buildingId, inspector, agg: newAgg() });
+      addToAgg(byInspector.get(key)!.agg, r);
+    });
+
+    // 건물은 조직 설정의 순서를 따르고, 삭제된 건물의 기록은 맨 뒤로
+    const buildingOrder = (id: string) => {
+      const i = buildings.findIndex((b) => b.id === id);
+      return i === -1 ? buildings.length : i;
+    };
+    const buildingRows = [...byBuilding.entries()]
+      .map(([id, agg]) => ({ id, name: getBuildingName(id), agg }))
+      .sort((a, b) => buildingOrder(a.id) - buildingOrder(b.id));
+    const inspectorRows = [...byInspector.values()]
+      .map((v) => ({ ...v, buildingName: getBuildingName(v.buildingId) }))
+      .sort((a, b) => buildingOrder(a.buildingId) - buildingOrder(b.buildingId) || b.agg.count - a.agg.count);
+
+    return { summary, buildingRows, inspectorRows };
+  }, [filteredRecords, buildings]);
+
+  // Computed: 입력 누락 확인 — 선택 기간에 기록이 하나도 없는 부서 (점검자 필터와 무관하게 건물/부서 기준)
+  const coverage = useMemo(() => {
+    const covered = new Set(
+      allRecords.filter((r) => inPeriod(r) && matchesOrg(r.buildingId, r.departmentId)).map((r) => r.departmentId)
+    );
+    const rows = buildings
+      .filter((b) => !filterBuilding || b.id === filterBuilding)
+      .map((b) => {
+        const depts = departments.filter((d) => d.buildingId === b.id && matchesOrg(b.id, d.id));
+        const missing = depts.filter((d) => !covered.has(d.id));
+        return { id: b.id, name: b.name, total: depts.length, done: depts.length - missing.length, missing };
+      })
+      .filter((row) => row.total > 0);
+    const total = rows.reduce((s, r) => s + r.total, 0);
+    const done = rows.reduce((s, r) => s + r.done, 0);
+    return { rows, total, done, missingCount: total - done };
+  }, [allRecords, departments, buildings, filterType, filterMonth, startDate, endDate, filterBuilding, filterDept]);
 
   // Export handlers
+  const exportReportCSV = () => {
+    const headers = ["소속 건물", "입력자", "입력 건수", "점검 부서 수", "평균 점수", "정상", "주의", "긴급"];
+    const rows = reportData.inspectorRows.map(({ buildingName, inspector, agg }) => [
+      buildingName, inspector, agg.count, agg.depts.size, avgOf(agg) ?? "", agg.normal, agg.warning, agg.urgent,
+    ]);
+    const missingRows = coverage.rows.flatMap((row) => row.missing.map((d) => [row.name, d.name]));
+    const csvLines = [headers.join(","), ...rows.map((r) => r.join(","))];
+    if (missingRows.length > 0) {
+      csvLines.push("", "입력 누락 부서", ["소속 건물", "부서명"].join(","), ...missingRows.map((r) => r.join(",")));
+    }
+    const csvContent = "﻿" + csvLines.join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `건물_입력자_리포트_${filterType === "month" ? filterMonth : `${startDate}_${endDate}`}.csv`;
+    link.click();
+  };
+
   const exportRawCSV = () => {
     const headers = ["점검일", "소속 건물", "부서명", "점검자", "조명/전열", "수돗물", "재활용", "중점점검", "총점", "상태", "특이사항"];
     const rows = filteredRecords.map(r => [
@@ -364,6 +482,95 @@ export function DataManagement() {
     );
   }
 
+  const selectClass =
+    "bg-white border border-surface-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-700 font-medium min-h-[44px] max-w-[11rem]";
+  const orgFilter = (
+    <>
+      <select
+        aria-label="건물 필터"
+        value={filterBuilding}
+        onChange={(e) => handleBuildingFilter(e.target.value)}
+        className={selectClass}
+      >
+        <option value="">전체 건물</option>
+        {buildings.map((b) => (
+          <option key={b.id} value={b.id}>{b.name}</option>
+        ))}
+      </select>
+      <select
+        aria-label="부서 필터"
+        value={filterDept}
+        onChange={(e) => setFilterDept(e.target.value)}
+        className={selectClass}
+      >
+        <option value="">전체 부서</option>
+        {deptOptions.map((d) => (
+          <option key={d.id} value={d.id}>{d.name}</option>
+        ))}
+      </select>
+      {(filterBuilding || filterDept) && (
+        <button
+          type="button"
+          onClick={() => { setFilterBuilding(""); setFilterDept(""); }}
+          className="px-3 py-2.5 text-sm font-medium text-primary-600 hover:text-primary-700 min-h-[44px]"
+        >
+          필터 초기화
+        </button>
+      )}
+    </>
+  );
+
+  // 상세 점검 내역·건물/입력자 리포트 탭이 같이 쓰는 필터 (기간 + 건물 + 부서 + 점검자)
+  const periodFilter = (
+    <div className="flex items-center flex-wrap gap-2">
+      <select
+        value={filterType}
+        onChange={(e) => setFilterType(e.target.value as "month" | "range")}
+        className="bg-white border border-surface-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-700 font-medium min-h-[44px]"
+      >
+        <option value="month">월간 조회</option>
+        <option value="range">기간 조회</option>
+      </select>
+
+      {filterType === "month" ? (
+        <input
+          type="month"
+          value={filterMonth}
+          onChange={(e) => setFilterMonth(e.target.value)}
+          className="bg-white border border-surface-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-900 font-medium min-h-[44px]"
+        />
+      ) : (
+        <div className="flex items-center gap-2">
+          <input
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            className="bg-white border border-surface-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-900 min-h-[44px]"
+          />
+          <span className="text-surface-500">~</span>
+          <input
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            className="bg-white border border-surface-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-900 min-h-[44px]"
+          />
+        </div>
+      )}
+      {orgFilter}
+      <select
+        aria-label="점검자 필터"
+        value={filterInspector}
+        onChange={(e) => setFilterInspector(e.target.value)}
+        className={selectClass}
+      >
+        <option value="">전체 점검자</option>
+        {inspectorOptions.map((name) => (
+          <option key={name} value={name}>{name}</option>
+        ))}
+      </select>
+    </div>
+  );
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <PageHeader title="점검 데이터 관리" subtitle="상세 점검 내역을 관리하고 연간/월별 점수표를 확인하세요." />
@@ -373,49 +580,16 @@ export function DataManagement() {
         items={[
           { key: "raw", label: "상세 점검 내역", shortLabel: "상세", icon: <CalendarDays className="w-4 h-4" /> },
           { key: "aggregate", label: "부서별 월간/연간 점수표", shortLabel: "집계", icon: <BarChart2 className="w-4 h-4" /> },
+          { key: "report", label: "건물·입력자 리포트", shortLabel: "리포트", icon: <Users className="w-4 h-4" /> },
         ]}
         active={activeTab}
-        onChange={(key) => setActiveTab(key as "raw" | "aggregate")}
+        onChange={(key) => setActiveTab(key as "raw" | "aggregate" | "report")}
       />
 
       {activeTab === "raw" ? (
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-surface-50 p-4 rounded-xl border border-surface-200">
-            <div className="flex items-center flex-wrap gap-2">
-              <select
-                value={filterType}
-                onChange={(e) => setFilterType(e.target.value as "month" | "range")}
-                className="bg-white border border-surface-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-700 font-medium min-h-[44px]"
-              >
-                <option value="month">월간 조회</option>
-                <option value="range">기간 조회</option>
-              </select>
-
-              {filterType === "month" ? (
-                <input
-                  type="month"
-                  value={filterMonth}
-                  onChange={(e) => setFilterMonth(e.target.value)}
-                  className="bg-white border border-surface-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-900 font-medium min-h-[44px]"
-                />
-              ) : (
-                <div className="flex items-center gap-2">
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="bg-white border border-surface-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-900 min-h-[44px]"
-                  />
-                  <span className="text-surface-500">~</span>
-                  <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="bg-white border border-surface-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-900 min-h-[44px]"
-                  />
-                </div>
-              )}
-            </div>
+            {periodFilter}
             <button
               onClick={exportRawCSV}
               className="flex items-center gap-2 px-4 py-2.5 bg-white border border-surface-300 hover:bg-surface-50 text-surface-700 text-sm font-medium rounded-lg transition-colors min-h-[44px]"
@@ -640,10 +814,166 @@ export function DataManagement() {
             </div>
           )}
         </div>
+      ) : activeTab === "report" ? (
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-surface-50 p-4 rounded-xl border border-surface-200">
+            {periodFilter}
+            <button
+              onClick={exportReportCSV}
+              disabled={reportData.summary.count === 0 && coverage.missingCount === 0}
+              className="flex items-center gap-2 px-4 py-2.5 bg-white border border-surface-300 hover:bg-surface-50 text-surface-700 text-sm font-medium rounded-lg transition-colors min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Download className="w-4 h-4" />
+              CSV 내보내기
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            {[
+              { label: "입력 건수", value: reportData.summary.count, unit: "건", color: "text-surface-900" },
+              { label: "평균 점수", value: avgOf(reportData.summary) ?? "-", unit: "점", color: "text-surface-900" },
+              { label: "정상", value: reportData.summary.normal, unit: "건", color: "text-success-600" },
+              { label: "주의", value: reportData.summary.warning, unit: "건", color: "text-warning-600" },
+              { label: "긴급", value: reportData.summary.urgent, unit: "건", color: "text-danger-600" },
+            ].map((s) => (
+              <div key={s.label} className="bg-white rounded-xl border border-surface-200 shadow-gh-sm px-4 py-3">
+                <div className="text-xs font-medium text-surface-500">{s.label}</div>
+                <div className={`mt-1 text-2xl font-bold ${s.color}`}>
+                  {s.value}
+                  {s.value !== "-" && <span className="ml-0.5 text-sm font-medium text-surface-400">{s.unit}</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* 입력 누락 확인 */}
+          <div className="bg-white rounded-xl border border-surface-200 shadow-gh-sm overflow-hidden">
+            <div className="flex flex-wrap items-center justify-between gap-2 bg-surface-50 px-4 sm:px-6 py-4 border-b border-surface-200">
+              <h3 className="font-semibold text-surface-900">입력 누락 확인</h3>
+              <div className="text-sm text-surface-600">
+                전체 <span className="font-semibold text-surface-900">{coverage.total}</span>개 부서 중{" "}
+                <span className="font-semibold text-surface-900">{coverage.done}</span>개 입력
+                {coverage.total > 0 && ` (${Math.round((coverage.done / coverage.total) * 100)}%)`}
+                {" · "}
+                <span className={`font-semibold ${coverage.missingCount > 0 ? "text-danger-600" : "text-success-600"}`}>
+                  누락 {coverage.missingCount}개
+                </span>
+              </div>
+            </div>
+            {coverage.rows.length === 0 ? (
+              <Empty message="조회할 부서가 없습니다." />
+            ) : (
+              <ul className="divide-y divide-surface-100">
+                {coverage.rows.map((row) => (
+                  <li key={row.id} className="px-4 sm:px-6 py-3">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                      <span className="font-medium text-surface-900 w-12">{row.name}</span>
+                      <span className="text-sm text-surface-600">
+                        {row.done} / {row.total}개 부서 입력
+                      </span>
+                      <div className="flex-1 min-w-[80px] h-1.5 rounded-full bg-surface-100 overflow-hidden" aria-hidden="true">
+                        <div
+                          className={`h-full rounded-full ${row.missing.length === 0 ? "bg-success-500" : "bg-primary-500"}`}
+                          style={{ width: `${(row.done / row.total) * 100}%` }}
+                        />
+                      </div>
+                      {row.missing.length === 0 && (
+                        <span className="text-xs font-semibold text-success-600">누락 없음</span>
+                      )}
+                    </div>
+                    {row.missing.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {row.missing.map((d) => (
+                          <span
+                            key={d.id}
+                            className="px-2 py-1 text-xs font-medium rounded-md bg-danger-50 text-danger-700 border border-danger-100"
+                          >
+                            {d.name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {filterInspector && (
+              <p className="px-4 sm:px-6 py-2 text-xs text-surface-500 bg-surface-50 border-t border-surface-100">
+                누락 여부는 점검자와 관계없이, 해당 기간에 입력이 하나도 없는 부서를 기준으로 합니다.
+              </p>
+            )}
+          </div>
+
+          {reportData.summary.count === 0 ? (
+            <Empty message="조건에 맞는 점검 데이터가 없습니다." className="bg-white rounded-xl border border-surface-200" />
+          ) : (
+            <>
+              <TableCard header={<h3 className="font-semibold text-surface-900">건물별 요약</h3>}>
+                <table className="w-full text-left text-sm whitespace-nowrap">
+                  <thead className="bg-surface-50 text-surface-600 border-b border-surface-200">
+                    <tr>
+                      <th className="py-3 px-4 font-semibold">건물</th>
+                      <th className="py-3 px-4 font-semibold text-right">입력 건수</th>
+                      <th className="py-3 px-4 font-semibold text-right">점검 부서 수</th>
+                      <th className="py-3 px-4 font-semibold text-right">평균 점수</th>
+                      <th className="py-3 px-4 font-semibold text-right">정상</th>
+                      <th className="py-3 px-4 font-semibold text-right">주의</th>
+                      <th className="py-3 px-4 font-semibold text-right">긴급</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-surface-100">
+                    {reportData.buildingRows.map(({ id, name, agg }) => (
+                      <tr key={id} className="hover:bg-surface-50">
+                        <td className="py-2 px-4 font-medium text-surface-900">{name}</td>
+                        <td className="py-2 px-4 text-right font-mono">{agg.count}</td>
+                        <td className="py-2 px-4 text-right font-mono">{agg.depts.size}</td>
+                        <td className="py-2 px-4 text-right font-mono font-semibold">{avgOf(agg)}</td>
+                        <td className="py-2 px-4 text-right font-mono text-success-600">{agg.normal}</td>
+                        <td className="py-2 px-4 text-right font-mono text-warning-600">{agg.warning}</td>
+                        <td className="py-2 px-4 text-right font-mono text-danger-600">{agg.urgent}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </TableCard>
+
+              <TableCard header={<h3 className="font-semibold text-surface-900">건물 · 입력자별 현황</h3>}>
+                <table className="w-full text-left text-sm whitespace-nowrap">
+                  <thead className="bg-surface-50 text-surface-600 border-b border-surface-200">
+                    <tr>
+                      <th className="py-3 px-4 font-semibold">건물</th>
+                      <th className="py-3 px-4 font-semibold">입력자</th>
+                      <th className="py-3 px-4 font-semibold text-right">입력 건수</th>
+                      <th className="py-3 px-4 font-semibold text-right">점검 부서 수</th>
+                      <th className="py-3 px-4 font-semibold text-right">평균 점수</th>
+                      <th className="py-3 px-4 font-semibold text-right">정상</th>
+                      <th className="py-3 px-4 font-semibold text-right">주의</th>
+                      <th className="py-3 px-4 font-semibold text-right">긴급</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-surface-100">
+                    {reportData.inspectorRows.map(({ buildingId, buildingName, inspector, agg }) => (
+                      <tr key={`${buildingId}|${inspector}`} className="hover:bg-surface-50">
+                        <td className="py-2 px-4 text-surface-700">{buildingName}</td>
+                        <td className="py-2 px-4 font-medium text-surface-900">{inspector}</td>
+                        <td className="py-2 px-4 text-right font-mono">{agg.count}</td>
+                        <td className="py-2 px-4 text-right font-mono">{agg.depts.size}</td>
+                        <td className="py-2 px-4 text-right font-mono font-semibold">{avgOf(agg)}</td>
+                        <td className="py-2 px-4 text-right font-mono text-success-600">{agg.normal}</td>
+                        <td className="py-2 px-4 text-right font-mono text-warning-600">{agg.warning}</td>
+                        <td className="py-2 px-4 text-right font-mono text-danger-600">{agg.urgent}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </TableCard>
+            </>
+          )}
+        </div>
       ) : (
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-surface-50 p-4 rounded-xl border border-surface-200">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center flex-wrap gap-2">
               <span className="text-sm font-semibold text-surface-700">조회 연도</span>
               <select
                 value={filterYear}
@@ -655,6 +985,7 @@ export function DataManagement() {
                   return <option key={y} value={y}>{y}년</option>;
                 })}
               </select>
+              {orgFilter}
             </div>
             <button
               onClick={exportAggregateCSV}
